@@ -1,0 +1,27 @@
+.selectCambiarHab .select2-container {
+    max-width: 200px;
+
+}
+
+.selectCambiarHab .select2-container--default .select2-selection--single {
+    width: 200px;
+    padding: 3px;
+    margin-left: 15px;
+    height: 35px;
+}
+
+.selectCambiarHab .select2-container {
+    max-width: 200px;
+
+}
+
+.selectCambiarHab .selection {
+    width: 200px;
+}
+
+.selectCambiarHab .select2-dropdown {
+    max-width: 200px;
+    margin-left: 15px;
+    margin-right: 15px;
+    border-radius: 2px;
+}

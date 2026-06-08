@@ -1,0 +1,168 @@
+.Ventas ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.Ventas li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e9e9e9;
+    padding: 10px 0;
+}
+
+.Ventas span {
+    margin-right: 15px;
+    margin-left: 17px;
+}
+
+.Ventas li:last-child {
+    border-bottom: none;
+
+}
+
+.Ventas .total {
+    font-weight: bold;
+}
+
+.Ventas .totalPagar {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.Ventas .agregar:hover {
+    color: rgb(141, 219, 23) !important;
+
+}
+
+#registroNuevo .agregar:hover {
+    color: rgb(141, 219, 23) !important;
+
+}
+
+.Ventas i:hover {
+    color: rgb(0, 0, 0) !important;
+
+}
+
+
+.Ventas i {
+    margin-left: 10px;
+    margin-right: 4px;
+}
+
+
+#modalCambiarHabitacion .modal-lg {
+    max-width:500px;
+
+}
+
+
+#modalVentaProducto .modal-lg,
+#modalVentaServicio .modal-lg {
+    max-width: 500px;
+
+}
+
+.Ventas .formatoTabla {
+    height: 240px;
+    max-height: 100%;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding-top: 0px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .Ventas .formatoTabla::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .Ventas .formatoTabla::-webkit-scrollbar-thumb {
+    background-color: #0042cf;
+  }
+  
+  .Ventas .formatoTabla:hover::-webkit-scrollbar-thumb {
+    background-color: #0033a1;
+  }
+  
+  .Ventas .formatoTabla-toolbar {
+    display: none;
+  }
+  
+  .Ventas .formatoTabla:hover .formatoTabla-toolbar {
+    display: block;
+  }
+ 
+  .Ventas .formatoTabla thead th {
+    position: sticky;
+    top: 0;
+    background-color: #e1efe9;
+    color: black;
+    padding: 6px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .Ventas h4 {
+    font-family: "Arial", sans-serif;
+    font-size: 24px;
+    font-weight: bold;
+    color: #333333;
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-align: left;
+    margin-top: 10px;
+    margin-bottom: 20px;
+  }
+ 
+  
+
+  
+
+
+.Ventas th,
+.Ventas td {
+    padding: 0.3rem;
+}
+
+
+.Ventas th,
+.Ventas td {
+    border: 1px solid #ffffff;
+   
+}
+
+.Ventas thead th,
+.Ventas thead td {
+    border-bottom-width: 2px;
+}
+
+.Ventas tbody tr:nth-of-type(odd) {
+    background-color: rgba(38, 186, 255, 0.05);
+}
+
+.Ventas tbody tr:hover {
+    background-color: rgb(99, 196, 123);
+    color: white;
+}
+
+.btnAgregarDisminuir{
+    background: #03a9f4;border-radius: 15px;color: white;font-size: 12px;
+background: #03a9f4;border-radius: 15px;color: white;font-size: 12px;
+}
+.btnAgregarDisminuir:hover{
+    background: #03a8f4a4;
+}
+
+.ventaSelect .select2-container--default .select2-selection--single {
+    padding: 5px;
+    height: 35px;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.ventaSelect .select2-container {
+    font-size: 13px;
+    max-width: 100%;
+}

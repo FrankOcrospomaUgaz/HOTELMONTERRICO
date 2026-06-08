@@ -1,0 +1,212 @@
+.detalle {
+    width: 100%;
+    margin-bottom: 1rem;
+    color: #212529;
+    border-collapse: collapse;
+}
+
+.detalle th,
+.detalle td {
+    padding: 0.75rem;
+    vertical-align: top;
+    border-top: 1px solid #dee2e6;
+}
+
+.detalle thead th {
+    vertical-align: bottom;
+
+    border-bottom: 2px solid #dee2e6;
+}
+
+.detalle {
+    background-color: #fff;
+}
+
+.detalle th,
+.detalle td {
+    padding: 0.3rem;
+}
+
+.detalle {
+    border: 1px solid #dee2e6;
+}
+
+.detalle th,
+.detalle td {
+    border: 1px solid #ffffff;
+    
+}
+
+.detalle thead th,
+.detalle thead td {
+    border-bottom-width: 2px;
+}
+
+.detalle tbody tr:nth-of-type(odd) {
+    background-color: rgba(38, 186, 255, 0.05);
+}
+
+.detalle tbody tr:hover {
+    background-color: rgb(99, 196, 123);
+    color: white;
+}
+
+
+.detalle .totalPagar {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.detalle .payment-icon {
+    font-size: 24px;
+    text-align: center;
+    background-color: #f8f9fa;
+    transition: background-color 0.3s;
+    cursor: pointer;
+}
+
+.detalle .payment-icon i {
+    color: #1f64db;
+    margin-right: 5px;
+}
+
+.detalle .payment-icon span {
+    color: #1f64db;
+}
+
+.detalle .payment-icon:hover {
+    background-color: #e2e6f1;
+}
+
+.pago .container {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.pago .detalle {
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.pago .opcion_pago {
+    margin-bottom: 20px;
+}
+
+.pago label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.pago input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.botonPagar .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    text-decoration: none;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.botonPagar .btn-primary {
+    background-color: #4CAF50;
+    color: #fff;
+}
+
+.botonPagar .btn-primary:hover {
+    background-color: #45a049;
+}
+
+.botonPagar .btn i {
+    margin-right: 5px;
+}
+
+
+.detalle .formatoTabla {
+    height: 240px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+
+    padding-top: 0px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.detalle .formatoTabla::-webkit-scrollbar {
+    width: 8px;
+}
+
+.detalle .formatoTabla::-webkit-scrollbar-thumb {
+    background-color: #0042cf;
+}
+
+.detalle .formatoTabla:hover::-webkit-scrollbar-thumb {
+    background-color: #0033a1;
+}
+
+.detalle .formatoTabla-toolbar {
+    display: none;
+}
+
+.detalle .formatoTabla:hover .formatoTabla-toolbar {
+    display: block;
+}
+
+
+.detalle .text-decoration-underline {
+    text-decoration: underline;
+}
+
+
+.detalle h4,
+.pago h4 {
+    font-family: "Arial", sans-serif;
+    font-size: 24px;
+    font-weight: bold;
+    color: #333333;
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-align: left;
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+
+.detalle .formatoTabla thead th {
+    position: sticky;
+    top: 0;
+    background-color: #e1efe9;
+    color: black;
+    padding: 6px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+}
+
+
+
+.detalleSelect .select2-container--default .select2-selection--single {
+    padding: 5px;
+    height: 35px;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.detalleSelect .select2-container {
+    font-size: 13px;
+    max-width: 100%;
+}
+
+

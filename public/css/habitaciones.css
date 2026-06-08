@@ -1,0 +1,119 @@
+h1 {
+    text-align: center;
+}
+
+.contenedorHabitaciones {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 25px;
+    width: 100%;
+}
+
+.habitacion {
+    flex-basis: calc(16.4% - 30px);
+    margin: auto;
+cursor: pointer;
+    text-align: center;
+    height: auto;
+    background-color: rgb(6 225 0);
+    border-radius: 25px;
+    border: 1px solid #000000;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.3s ease-in-out, box-shadow 0.1s ease-in-out;
+
+    box-shadow: 5px 4px 4px #540000;
+}
+
+.habitacion:hover {
+    transform: scale(1.05);
+    box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+    box-shadow: 7px 5px 5px #0054f0;
+}
+
+.centro {
+    justify-content: space-between;
+    align-items: center;
+    margin: auto;
+}
+
+.numero {
+    font-size: 25px;
+    color: white;
+    font-weight: bold;
+}
+
+.row {
+    margin: auto;
+    text-align: center;
+}
+
+.temporizador,
+.temporizadorTabla {
+    font-size: 13px;
+    color: rgb(0, 0, 0);
+    font-weight: bold;
+    background-color: rgb(255, 255, 255);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: black;
+    border-radius: 5px;
+    font-family: Arial, sans-serif;
+    padding: 5px 7px;
+}
+
+.Inferior {
+    margin-top: 10px;
+    text-align: center;
+    color: white;
+}
+
+.estado {
+    font-size: 12px;
+    font-weight: bold;
+}
+
+#modalCambiarSituacion .modal-lg {
+    max-width: 500px;
+}
+
+.animar-escala {
+    animation: escalado 0.6s infinite alternate;
+    /* La animación durará 1 segundo y se repetirá de forma infinita */
+}
+
+@keyframes escalado {
+    from {
+        transform: scale(1);
+        /* Escala inicial */
+    }
+
+    to {
+        transform: scale(1.04);
+        /* Escala final, ajusta el valor según prefieras */
+    }
+}
+
+.estiloRojo {
+    background-color: rgb(213, 0, 0) !important;
+    color: white;
+}
+
+.estiloOcupado {
+    background-color: #ff8000 !important;
+    color: white;
+}
+
+/* Estilos para el tooltip  Label Flotante en los icconos de accion*/
+.tablaContainer {
+    overflow-x: auto;
+    /* Permite el desplazamiento horizontal cuando el contenido excede el ancho del contenedor */
+    overflow-y: hidden;
+    /* Oculta la barra de desplazamiento vertical */
+    margin: 10px;
+    width: 100%;
+}
+
+

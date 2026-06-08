@@ -1,0 +1,38 @@
+.fa-search:hover {
+    font-weight: bolder;
+    font-size:10px;
+    color: rgb(116, 178, 255);
+    text-shadow: 1px 1px 1px black;
+}
+.fa-search{
+    font-size:12px;
+}
+.btn-transition {
+    transition: all 0.3s ease-in-out;
+}
+
+.btn-transition:hover {
+    transform: translateY(-2px);
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.2);
+
+}
+
+.verde {
+    background-color: #198754;
+    color: white;
+}
+
+.verde:hover {
+    background-color: #198754;
+    color: white;
+    font-weight: bolder;
+}
+.bloqueCuota{
+    background-color:  rgb(25 135 84 / 13%);
+    border-radius: 15px;
+    margin: auto;
+    text-align: center;
+    width: 100%;
+    padding: 10px;
+    padding-top: 18px;
+}

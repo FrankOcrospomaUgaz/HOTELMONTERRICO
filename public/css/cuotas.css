@@ -1,0 +1,66 @@
+.list-container {
+    height: 300px;
+    overflow-y: auto;
+    border-radius: 10px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    padding: 10px;
+}
+
+
+.list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.list li {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+}
+
+.list li .data-container {
+    flex: 1;
+    display:inline;
+    flex-direction: column;
+    justify-content: space-between;
+    margin-left: 10px;
+}
+
+.list li .titleN {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.list li .data-container .descriptionVerde{
+    font-size: 14px;
+    color: #00ff00;
+}
+.list li .data-container .descriptionRojo{
+    font-size: 14px;
+    color: #ff0000;
+}
+.list li .data-container .descriptionAmarillo{
+    font-size: 14px;
+    color: #ffc107;
+}
+
+.list li .data-container .additional-text {
+    font-size: 12px;
+    color: #999;
+    margin-top: 5px;
+}
+
+#modalCuotas .modal-lg {
+    max-width: 1000px;
+}
+
+.bloqueCuota{
+    background-color:  rgb(0 123 255 / 6%);
+    border-radius: 15px;
+    margin: auto;
+    text-align: center;
+    width: 100%;
+    padding: 10px;
+    padding-top: 18px;
+}

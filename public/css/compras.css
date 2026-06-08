@@ -1,0 +1,168 @@
+.Compras ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.Compras li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e9e9e9;
+    padding: 10px 0;
+}
+
+.Compras span {
+    margin-right: 15px;
+    margin-left: 17px;
+}
+
+.Compras li:last-child {
+    border-bottom: none;
+
+}
+
+.Compras .total {
+    font-weight: bold;
+}
+
+.Compras .totalPagar {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.Compras .agregar:hover {
+    color: rgb(141, 219, 23) !important;
+
+}
+
+#registroNuevo .agregar:hover {
+    color: rgb(141, 219, 23) !important;
+
+}
+
+.Compras i:hover {
+    color: rgb(0, 0, 0) !important;
+
+}
+
+
+.Compras i {
+    margin-left: 10px;
+    margin-right: 4px;
+}
+
+
+#modalCambiarHabitacion .modal-lg {
+    max-width:500px;
+
+}
+
+
+#modalVentaProducto .modal-lg,
+#modalVentaServicio .modal-lg {
+    max-width: 500px;
+
+}
+
+.Compras .formatoTabla {
+    height: 500px;
+    max-height: 100%;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding-top: 0px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .Compras .formatoTabla::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .Compras .formatoTabla::-webkit-scrollbar-thumb {
+    background-color: #0042cf;
+  }
+  
+  .Compras .formatoTabla:hover::-webkit-scrollbar-thumb {
+    background-color: #0033a1;
+  }
+  
+  .Compras .formatoTabla-toolbar {
+    display: none;
+  }
+  
+  .Compras .formatoTabla:hover .formatoTabla-toolbar {
+    display: block;
+  }
+ 
+  .Compras .formatoTabla thead th {
+    position: sticky;
+    top: 0;
+    background-color: #e1efe9;
+    color: black;
+    padding: 6px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .Compras h4 {
+    font-family: "Arial", sans-serif;
+    font-size: 24px;
+    font-weight: bold;
+    color: #333333;
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-align: left;
+    margin-top: 10px;
+    margin-bottom: 20px;
+  }
+ 
+  
+
+  
+
+
+.Compras th,
+.Compras td {
+    padding: 0.3rem;
+}
+
+
+.Compras th,
+.Compras td {
+    border: 1px solid #ffffff;
+   
+}
+
+.Compras thead th,
+.Compras thead td {
+    border-bottom-width: 2px;
+}
+
+.Compras tbody tr:nth-of-type(odd) {
+    background-color: rgba(38, 186, 255, 0.05);
+}
+
+.Compras tbody tr:hover {
+    background-color: rgb(99, 196, 123);
+    color: white;
+}
+
+.btnAgregarDisminuir{
+    background: #03a9f4;border-radius: 15px;color: white;font-size: 12px;
+background: #03a9f4;border-radius: 15px;color: white;font-size: 12px;
+}
+.btnAgregarDisminuir:hover{
+    background: #03a8f4a4;
+}
+
+.compraSelect .select2-container--default .select2-selection--single {
+    padding: 5px;
+    height: 35px;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.compraSelect .select2-container {
+    font-size: 13px;
+    max-width: 100%;
+}
