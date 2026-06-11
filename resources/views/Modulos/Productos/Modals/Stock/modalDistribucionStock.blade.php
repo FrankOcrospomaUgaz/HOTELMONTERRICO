@@ -60,6 +60,7 @@
                                 <th>Stock</th>
                                 <th>Estado</th>
                                 <th>Acción rápida</th>
+                                <th>Quitar</th>
                             </tr>
                         </thead>
                         <tbody id="tablaDistribucionStock">

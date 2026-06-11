@@ -102,6 +102,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::post('stockProductos/repartir/{id}', 'App\Http\Controllers\productoController@repartirStockHabitaciones')->name('stockProductos.repartir');
     Route::get('stockProductos/distribucion/{id}', 'App\Http\Controllers\productoController@distribucionProducto')->name('stockProductos.distribucion');
     Route::post('stockProductos/transferir/{id}', 'App\Http\Controllers\productoController@transferirStockHabitacion')->name('stockProductos.transferir');
+    Route::post('stockProductos/retirar/{id}', 'App\Http\Controllers\productoController@retirarStockHabitacion')->name('stockProductos.retirar');
 
     Route::resource('vistaPrincipal', 'App\Http\Controllers\vistaPrincipalController');
     Route::get('vistaPrincipal/show', 'App\Http\Controllers\vistaPrincipalController@show');

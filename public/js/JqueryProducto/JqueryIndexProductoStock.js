@@ -386,20 +386,24 @@ window.verDistribucionStock = function (id, nombre) {
         $("#habitacionDestinoStock").html("");
         $("#tablaDistribucionStock").html("");
 
-        $.each(data.habitaciones, function (index, habitacion) {
-            var badge = habitacion.tiene_stock
-                ? '<span class="badge bg-success">Con stock</span>'
-                : '<span class="badge bg-secondary">Sin stock</span>';
+    $.each(data.habitaciones, function (index, habitacion) {
+        var badge = habitacion.tiene_stock
+            ? '<span class="badge bg-success">Con stock</span>'
+            : '<span class="badge bg-secondary">Sin stock</span>';
+        var botonQuitar = habitacion.stock > 0
+            ? "<button type='button' class='btn btn-sm btn-outline-danger btn-quitar-rapido' data-id='" + habitacion.id + "' data-stock='" + habitacion.stock + "'>Dejar en 0</button>"
+            : "<span class='text-muted'>-</span>";
 
-            $("#tablaDistribucionStock").append(
-                "<tr>" +
+        $("#tablaDistribucionStock").append(
+            "<tr>" +
                     "<td>" + habitacion.numero + "</td>" +
                     "<td>" + habitacion.situacion + "</td>" +
                     "<td>" + habitacion.stock + "</td>" +
                     "<td>" + badge + "</td>" +
                     "<td><button type='button' class='btn btn-sm btn-outline-primary btn-mover-rapido' data-id='" + habitacion.id + "'>Mover</button></td>" +
+                    "<td>" + botonQuitar + "</td>" +
                 "</tr>"
-            );
+        );
 
             $("#habitacionDestinoStock").append(
                 "<option value='" + habitacion.id + "'>Habitacion " + habitacion.numero + " (" + (habitacion.tiene_stock ? "Con stock" : "Sin stock") + ")</option>"
@@ -419,6 +423,67 @@ window.verDistribucionStock = function (id, nombre) {
         });
     });
 };
+
+$(document).on("click", ".btn-quitar-rapido", function () {
+    var habitacionId = $(this).data("id");
+    var stockActual = parseFloat($(this).data("stock") || 0);
+    var idProducto = $("#productoDistribucionId").val();
+    var nombreProducto = $("#productoDistribucionNombre").text();
+
+    if (!idProducto || !habitacionId || stockActual <= 0) {
+        return;
+    }
+
+    Swal.fire({
+        title: "Dejar stock en 0",
+        html:
+            "<strong>Producto:</strong> " + nombreProducto +
+            "<br><strong>Stock actual en habitacion:</strong> " + stockActual +
+            "<br>Esto regresara todo ese stock al almacen general.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Si, quitar",
+        cancelButtonText: "Cancelar",
+    }).then(function (result) {
+        if (!result.isConfirmed) {
+            return;
+        }
+
+        $.ajax({
+            type: "POST",
+            url: "stockProductos/retirar/" + idProducto,
+            data: {
+                _token: $('meta[name="csrf-token"]').attr("content"),
+                habitacion_id: habitacionId,
+                cantidad: stockActual,
+            },
+            success: function (data) {
+                Swal.fire({
+                    icon: "success",
+                    title: "Stock ajustado",
+                    html:
+                        "<strong>Producto:</strong> " + data.producto +
+                        "<br><strong>Habitacion:</strong> " + data.habitacion +
+                        "<br><strong>Almacen general:</strong> " + data.stock_general +
+                        "<br><strong>Stock habitacion:</strong> " + data.stock_habitacion +
+                        "<br><strong>Total:</strong> " + data.stock_total,
+                });
+
+                $("#modalDistribucionStock").modal("hide");
+                $("#tbProductoStock").DataTable().ajax.reload(null, false);
+            },
+            error: function (xhr) {
+                Swal.fire({
+                    icon: "error",
+                    title: "No se pudo quitar",
+                    text: xhr.responseJSON && xhr.responseJSON.message
+                        ? xhr.responseJSON.message
+                        : "Ocurrio un error al devolver el stock.",
+                });
+            },
+        });
+    });
+});
 
 $(document).on("change", ".habitacion-reparto-check", function () {
     actualizarResumenRepartoRapido();

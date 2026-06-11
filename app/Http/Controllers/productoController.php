@@ -545,4 +545,59 @@ class productoController extends Controller
 
         return response()->json($resultado);
     }
+
+    public function retirarStockHabitacion(Request $request, $id)
+    {
+        $request->validate([
+            'habitacion_id' => 'required|integer',
+            'cantidad' => 'nullable|numeric|min:1',
+        ]);
+
+        $producto = Producto::findOrFail($id);
+        $habitacionId = (int) $request->input('habitacion_id');
+        $habitacion = Habitacion::find($habitacionId);
+
+        if (!$habitacion) {
+            return response()->json([
+                'message' => 'La habitacion indicada no existe.',
+            ], 422);
+        }
+
+        $stockHabitacionActual = $this->obtenerStockHabitacionProducto($producto->id, $habitacion->id);
+
+        if ($stockHabitacionActual <= 0) {
+            return response()->json([
+                'message' => 'La habitacion no tiene stock para retirar.',
+            ], 422);
+        }
+
+        $cantidad = $request->filled('cantidad')
+            ? (float) $request->input('cantidad')
+            : (float) $stockHabitacionActual;
+
+        if ($cantidad > $stockHabitacionActual) {
+            return response()->json([
+                'message' => 'La cantidad supera el stock disponible en la habitacion.',
+            ], 422);
+        }
+
+        $resultado = DB::transaction(function () use ($producto, $habitacion, $cantidad) {
+            $producto->stock = (float) $producto->stock + $cantidad;
+            $producto->save();
+
+            $this->decrementarStockHabitacion($producto->id, $habitacion->id, $cantidad);
+
+            return [
+                'producto' => $producto->nombre,
+                'habitacion' => $habitacion->numero,
+                'stock_general' => (float) $producto->stock,
+                'stock_habitacion' => $this->obtenerStockHabitacionProducto($producto->id, $habitacion->id),
+                'stock_habitaciones' => $this->obtenerStockHabitacionesProducto($producto->id),
+                'stock_total' => $this->obtenerStockTotalProducto($producto),
+                'cantidad_retirada' => $cantidad,
+            ];
+        });
+
+        return response()->json($resultado);
+    }
 }
