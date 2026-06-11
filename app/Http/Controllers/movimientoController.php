@@ -68,6 +68,18 @@ class movimientoController extends Controller
         return response()->json(Movimiento::find($id));
     }
 
+    public function showEgresos(Request $request)
+    {
+        if ($request->ajax()) {
+            $movimientosCajaEgresos = DB::select('CALL showEgresos(?, ?)', [null, null]);
+
+            return datatables($movimientosCajaEgresos)
+                ->make(true);
+        }
+
+        return response()->json([]);
+    }
+
     /**
      * Show the form for editing the specified resource.
      *
@@ -122,11 +134,6 @@ class movimientoController extends Controller
 
             if ($movimientoExistente == null) {
                 $habitacion = Habitacion::where('id', $MovimientoVenta->habitacion_id)->first();
-                $stockLiberado = [];
-
-                if ($habitacion) {
-                    $stockLiberado = $this->liberarStockHabitacion($habitacion->id);
-                }
 
                 $MovimientoVenta->fechasalida = Carbon::now()->format('Y-m-d H:i:s');
                 $MovimientoVenta->plin = $request->input('pagoPlin');
@@ -183,7 +190,7 @@ class movimientoController extends Controller
                     'detalleMovimientos' => $detalleVentas,
                     'direccion' => $persona->direccion,
                     "tipoDocumento" => $MovimientoVenta->tipodocumento_id,
-                    'stockLiberado' => $stockLiberado,
+                    'stockLiberado' => [],
                     'mensaje' => 'exito',
                 ];
                 return response()->json($datosUsuarios);

@@ -154,7 +154,7 @@ class productoController extends Controller
 
             return $producto;
         })->filter(function ($producto) {
-            return $producto->stock_habitacion > 0 && $producto->estado == 1;
+            return $producto->estado == 1;
         })->values();
 
         return response()->json($productos);

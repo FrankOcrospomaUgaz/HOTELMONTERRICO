@@ -60,13 +60,25 @@ $(document).ready(function () {
         var precioFormateado = parseFloat(precio || 0).toFixed(2);
         var stockGeneralFormateado = parseFloat(stockGeneral || 0);
         var stockHabitacionFormateado = parseFloat(stockHabitacion || 0);
+        var $stockTexto = $("#stockHabitacionTexto");
 
         $("#precioProducto").val(precioFormateado);
         $("#precioProductoDisplay").text(precioFormateado);
         $("#stockGeneralProductoDisplay").text(stockGeneralFormateado);
         $("#stockHabitacionProducto").val(stockHabitacionFormateado);
         $("#stockHabitacionProductoDisplay").text(stockHabitacionFormateado);
-        $("#stockHabitacionTexto").text("Stock disponible en la habitacion: " + stockHabitacionFormateado);
+
+        if (stockHabitacionFormateado <= 0) {
+            $stockTexto
+                .text("Sin stock en la habitacion. Usa Reponer para cargarlo.")
+                .removeClass("text-secondary text-success")
+                .addClass("text-danger");
+        } else {
+            $stockTexto
+                .text("Stock disponible en la habitacion: " + stockHabitacionFormateado)
+                .removeClass("text-danger text-success")
+                .addClass("text-secondary");
+        }
     }
 
     function refrescarResumenProductoSeleccionado() {
@@ -210,8 +222,8 @@ $(document).ready(function () {
         if (!productoId || stockDisponible <= 0) {
             Swal.fire({
                 icon: "warning",
-                title: "Sin stock en habitación",
-                text: "Este producto no tiene stock disponible en la habitación.",
+                title: "Sin stock en habitacion",
+                text: "Este producto no tiene stock disponible. Usa Reponer para mover stock desde general.",
             });
             return;
         }
@@ -267,15 +279,19 @@ $(document).ready(function () {
                                 Swal.fire({
                                     icon: "warning",
                                     title: "Sin stock",
-                                    text: "No hay productos disponibles en el almacén de esta habitación.",
+                                    text: "No hay productos activos para esta habitacion.",
                                 });
                                 return;
                             }
 
                             $.each(data, function (index, item) {
+                                var stockHabitacion = parseFloat(item.stock_habitacion || 0);
+                                var textoStock = stockHabitacion > 0
+                                    ? "Stock(" + stockHabitacion + ")"
+                                    : "Sin stock";
                                 $("#productos").html(
                                     $("#productos").html() +
-                                `<option value="${item.id}" data-nombre="${item.nombre}" data-stock="${item.stock_habitacion}"> ${item.nombre} -> Stock(${item.stock_habitacion}) </option>`
+                                `<option value="${item.id}" data-nombre="${item.nombre}" data-stock="${item.stock_habitacion}"> ${item.nombre} -> ${textoStock} </option>`
                                 );
                             });
 
