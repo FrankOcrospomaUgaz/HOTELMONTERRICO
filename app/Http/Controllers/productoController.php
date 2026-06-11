@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Models\Habitacion;
 
 class productoController extends Controller
 {
@@ -54,6 +55,8 @@ class productoController extends Controller
             } else {
                 $productosFiltrados  = DB::select('call showProductos');
             }
+            $productosFiltrados = $this->enriquecerProductosConStockHabitacion($productosFiltrados);
+
             return datatables($productosFiltrados)
                 ->addColumn('action', function ($producto) {
                     $permisosEditar = Permission::where('padreCrud', self::idVista)->get()[1];
@@ -114,11 +117,74 @@ class productoController extends Controller
             } else {
                 $productosFiltrados = DB::select('call showProductos');
             }
-            return datatables($productosFiltrados)->make(true);
+            $productosFiltrados = $this->enriquecerProductosConStockHabitacion($productosFiltrados);
+
+            return datatables($productosFiltrados)
+                ->addColumn('action', function ($producto) {
+                    return '
+                        <div class="d-flex justify-content-center gap-1 flex-wrap">
+                            <a href="javascript:void(0)" onclick="verDistribucionStock(' . $producto->id . ', \'' . addslashes($producto->nombre) . '\')" style="background:#0b5ed7;margin:2px; color:white;" class="btn btn-sm btn-primary" title="Ver distribución">
+                                <i class="fa-solid fa-eye"></i>
+                            </a>
+                            <a href="javascript:void(0)" onclick="repartirStockHabitacion(' . $producto->id . ', \'' . addslashes($producto->nombre) . '\')" style="background:#198754;margin:2px; color:white;" class="btn btn-sm btn-success" title="Reparto rápido">
+                                <i class="fa-solid fa-people-arrows"></i>
+                            </a>
+                        </div>';
+                })
+                ->rawColumns(['action'])
+                ->make(true);
         } else {
         }
 
         return view('Modulos.Productos.indexReporte');
+    }
+
+    public function showHabitacion($numHabitacion)
+    {
+        $habitacion = Habitacion::where('numero', $numHabitacion)->first();
+
+        if (!$habitacion) {
+            return response()->json([]);
+        }
+
+        $productos = DB::select('call showProductos');
+        $productos = collect($productos)->map(function ($producto) use ($habitacion) {
+            $producto->stock_habitacion = $this->obtenerStockHabitacionProducto($producto->id, $habitacion->id);
+            $producto->stock_total = $this->obtenerStockTotalProducto($producto);
+
+            return $producto;
+        })->filter(function ($producto) {
+            return $producto->stock_habitacion > 0 && $producto->estado == 1;
+        })->values();
+
+        return response()->json($productos);
+    }
+
+    public function distribucionProducto($id)
+    {
+        $producto = Producto::findOrFail($id);
+        $habitaciones = $this->obtenerHabitacionesActivas()->map(function ($habitacion) use ($producto) {
+            $stockHabitacion = $this->obtenerStockHabitacionProducto($producto->id, $habitacion->id);
+
+            return [
+                'id' => $habitacion->id,
+                'numero' => $habitacion->numero,
+                'situacion' => $habitacion->situacion,
+                'stock' => $stockHabitacion,
+                'tiene_stock' => $stockHabitacion > 0,
+            ];
+        })->values();
+
+        return response()->json([
+            'producto' => [
+                'id' => $producto->id,
+                'nombre' => $producto->nombre,
+            ],
+            'stock_general' => (float) $producto->stock,
+            'stock_habitaciones' => $this->obtenerStockHabitacionesProducto($producto->id),
+            'stock_total' => $this->obtenerStockTotalProducto($producto),
+            'habitaciones' => $habitaciones,
+        ]);
     }
 
     /**
@@ -211,6 +277,18 @@ class productoController extends Controller
         return response()->json(Producto::find($id));
     }
 
+    public function stockHabitacion($productoId, $numHabitacion)
+    {
+        $habitacion = Habitacion::where('numero', $numHabitacion)->first();
+        if (!$habitacion) {
+            return response()->json(['stockHabitacion' => 0]);
+        }
+
+        return response()->json([
+            'stockHabitacion' => $this->obtenerStockHabitacionProducto((int) $productoId, (int) $habitacion->id),
+        ]);
+    }
+
     /**
      * Show the form for editing the specified resource.
      *
@@ -296,5 +374,175 @@ class productoController extends Controller
         $producto->estado = ($producto->estado == 0) ? 1 : 0;
         $producto->save();
         return response($cadena);
+    }
+
+    public function repartirStockHabitaciones(Request $request, $id)
+    {
+        $producto = Producto::findOrFail($id);
+
+        $habitacionesIds = $request->input('habitaciones_ids', []);
+        if (!is_array($habitacionesIds) || count($habitacionesIds) === 0) {
+            $habitacionesIds = $this->obtenerHabitacionesActivas()->pluck('id')->toArray();
+        }
+
+        $cantidadPorHabitacion = (float) $request->input('cantidad_por_habitacion', 1);
+        if ($cantidadPorHabitacion <= 0) {
+            $cantidadPorHabitacion = 1;
+        }
+
+        $distribucionExacta = $request->boolean('distribucion_exacta', false);
+
+        $resultado = DB::transaction(function () use ($producto, $habitacionesIds, $cantidadPorHabitacion, $distribucionExacta) {
+            $habitaciones = Habitacion::whereIn('id', $habitacionesIds)
+                ->where('estado', 1)
+                ->orderBy('numero', 'asc')
+                ->get();
+
+            $stockDisponible = (float) $producto->stock;
+            $habitacionesRepartidas = [];
+            $habitacionesSinStock = [];
+            $habitacionesParciales = [];
+            $asignaciones = [];
+
+            if ($distribucionExacta) {
+                foreach ($habitaciones as $habitacion) {
+                    if ($stockDisponible < $cantidadPorHabitacion) {
+                        $habitacionesSinStock[] = $habitacion->numero;
+                        $asignaciones[$habitacion->id] = 0;
+                        continue;
+                    }
+
+                    $this->incrementarStockHabitacion($producto->id, $habitacion->id, $cantidadPorHabitacion);
+                    $stockDisponible -= $cantidadPorHabitacion;
+                    $asignaciones[$habitacion->id] = $cantidadPorHabitacion;
+                }
+            } else {
+                $ordenBase = $habitaciones;
+                if ($stockDisponible < $habitaciones->count()) {
+                    $ordenBase = $habitaciones->shuffle()->values();
+                }
+
+                foreach ($ordenBase as $habitacion) {
+                    if ($stockDisponible <= 0) {
+                        break;
+                    }
+
+                    $this->incrementarStockHabitacion($producto->id, $habitacion->id, 1);
+                    $stockDisponible -= 1;
+                    $asignaciones[$habitacion->id] = ($asignaciones[$habitacion->id] ?? 0) + 1;
+                }
+
+                $puedeRecibirMas = function ($habitacion) use (&$asignaciones, $cantidadPorHabitacion) {
+                    return (($asignaciones[$habitacion->id] ?? 0) < $cantidadPorHabitacion);
+                };
+
+                while ($stockDisponible > 0) {
+                    $restantes = $habitaciones->filter($puedeRecibirMas)->values();
+                    if ($restantes->isEmpty()) {
+                        break;
+                    }
+
+                    $huboAsignacion = false;
+                    foreach ($restantes->shuffle()->values() as $habitacion) {
+                        if ($stockDisponible <= 0) {
+                            break;
+                        }
+
+                        if (($asignaciones[$habitacion->id] ?? 0) >= $cantidadPorHabitacion) {
+                            continue;
+                        }
+
+                        $this->incrementarStockHabitacion($producto->id, $habitacion->id, 1);
+                        $stockDisponible -= 1;
+                        $asignaciones[$habitacion->id] = ($asignaciones[$habitacion->id] ?? 0) + 1;
+                        $huboAsignacion = true;
+                    }
+
+                    if (!$huboAsignacion) {
+                        break;
+                    }
+                }
+            }
+
+            foreach ($habitaciones as $habitacion) {
+                $asignado = (float) ($asignaciones[$habitacion->id] ?? 0);
+                if ($asignado > 0) {
+                    $habitacionesRepartidas[] = $habitacion->numero;
+                }
+                if ($asignado <= 0) {
+                    $habitacionesSinStock[] = $habitacion->numero;
+                    continue;
+                }
+
+                if (!$distribucionExacta && $asignado < $cantidadPorHabitacion) {
+                    $habitacionesParciales[] = $habitacion->numero;
+                }
+            }
+
+            $producto->stock = $stockDisponible;
+            $producto->save();
+
+            return [
+                'producto' => $producto->nombre,
+                'stock_general' => (float) $producto->stock,
+                'stock_habitacion' => $this->obtenerStockHabitacionesProducto($producto->id),
+                'stock_total' => $this->obtenerStockTotalProducto($producto),
+                'repartidas' => $habitacionesRepartidas,
+                'sin_stock' => $habitacionesSinStock,
+                'parciales' => $habitacionesParciales,
+                'cantidad_por_habitacion' => $cantidadPorHabitacion,
+                'distribucion_exacta' => $distribucionExacta,
+            ];
+        });
+
+        return response()->json($resultado);
+    }
+
+    public function transferirStockHabitacion(Request $request, $id)
+    {
+        $request->validate([
+            'habitacion_id' => 'required|integer',
+            'cantidad' => 'required|numeric|min:1',
+        ]);
+
+        $producto = Producto::findOrFail($id);
+        $habitacionId = (int) $request->input('habitacion_id');
+        $habitacion = Habitacion::find($habitacionId);
+
+        if (!$habitacion) {
+            $habitacion = Habitacion::where('numero', $habitacionId)->first();
+        }
+
+        if (!$habitacion) {
+            return response()->json([
+                'message' => 'La habitacion indicada no existe.',
+            ], 422);
+        }
+
+        $cantidad = (float) $request->input('cantidad');
+
+        if ((float) $producto->stock < $cantidad) {
+            return response()->json([
+                'message' => 'No existe suficiente stock en el almacén general.',
+            ], 422);
+        }
+
+        $resultado = DB::transaction(function () use ($producto, $habitacion, $cantidad) {
+            $producto->stock = (float) $producto->stock - $cantidad;
+            $producto->save();
+
+            $this->incrementarStockHabitacion($producto->id, $habitacion->id, $cantidad);
+
+            return [
+                'producto' => $producto->nombre,
+                'habitacion' => $habitacion->numero,
+                'stock_general' => (float) $producto->stock,
+                'stock_habitacion' => $this->obtenerStockHabitacionProducto($producto->id, $habitacion->id),
+                'stock_habitaciones' => $this->obtenerStockHabitacionesProducto($producto->id),
+                'stock_total' => $this->obtenerStockTotalProducto($producto),
+            ];
+        });
+
+        return response()->json($resultado);
     }
 }

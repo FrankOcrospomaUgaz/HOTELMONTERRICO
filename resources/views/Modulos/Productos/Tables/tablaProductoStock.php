@@ -8,8 +8,11 @@
     <th scope="col">Precio Venta</th>
     <th scope="col">Unidad</th>
     <th scope="col">Categoria</th><th scope="col">Situacion</th>
-    <th scope="col">Stock</th>
+    <th scope="col">Stock General</th>
+    <th scope="col">Stock Habitaciones</th>
+    <th scope="col">Stock Total</th>
     <th scope="col">Fecha Creacion</th>
+    <th scope="col">Accion</th>
 
     
 

@@ -7,6 +7,9 @@ use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\DB;
+use App\Models\Habitacion;
+use App\Models\Producto;
+use App\Models\stockHabitacion;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Auth;
@@ -96,5 +99,120 @@ class Controller extends BaseController
                 config(['adminlte.menu' => $menu2]);
             }
         }
+    }
+
+    protected function obtenerStockHabitacionProducto(int $productoId, int $habitacionId): float
+    {
+        return (float) stockHabitacion::where('producto_id', $productoId)
+            ->where('habitacion_id', $habitacionId)
+            ->where('estado', 1)
+            ->sum('cantidad');
+    }
+
+    protected function obtenerStockHabitacionesProducto(int $productoId): float
+    {
+        return (float) stockHabitacion::where('producto_id', $productoId)
+            ->where('estado', 1)
+            ->sum('cantidad');
+    }
+
+    protected function obtenerStockTotalProducto($producto): float
+    {
+        return (float) $producto->stock + $this->obtenerStockHabitacionesProducto((int) $producto->id);
+    }
+
+    protected function incrementarStockHabitacion(int $productoId, int $habitacionId, float $cantidad): void
+    {
+        $registro = stockHabitacion::where('producto_id', $productoId)
+            ->where('habitacion_id', $habitacionId)
+            ->where('estado', 1)
+            ->first();
+
+        if ($registro) {
+            $registro->cantidad = (float) $registro->cantidad + $cantidad;
+            $registro->save();
+            return;
+        }
+
+        stockHabitacion::create([
+            'producto_id' => $productoId,
+            'habitacion_id' => $habitacionId,
+            'cantidad' => $cantidad,
+            'estado' => 1,
+        ]);
+    }
+
+    protected function decrementarStockHabitacion(int $productoId, int $habitacionId, float $cantidad): void
+    {
+        $registro = stockHabitacion::where('producto_id', $productoId)
+            ->where('habitacion_id', $habitacionId)
+            ->where('estado', 1)
+            ->first();
+
+        if (!$registro || (float) $registro->cantidad < $cantidad) {
+            throw new \RuntimeException('No existe stock suficiente en la habitación.');
+        }
+
+        $nuevoStock = (float) $registro->cantidad - $cantidad;
+        if ($nuevoStock <= 0) {
+            $registro->delete();
+            return;
+        }
+
+        $registro->cantidad = $nuevoStock;
+        $registro->save();
+    }
+
+    protected function liberarStockHabitacion(int $habitacionId): array
+    {
+        $registros = stockHabitacion::where('habitacion_id', $habitacionId)
+            ->where('estado', 1)
+            ->get();
+
+        $detalle = [];
+
+        foreach ($registros as $registro) {
+            $producto = Producto::find($registro->producto_id);
+
+            if (!$producto) {
+                $registro->delete();
+                continue;
+            }
+
+            $producto->stock = (float) $producto->stock + (float) $registro->cantidad;
+            $producto->save();
+
+            $detalle[] = [
+                'producto_id' => $producto->id,
+                'producto' => $producto->nombre,
+                'cantidad' => (float) $registro->cantidad,
+            ];
+
+            $registro->delete();
+        }
+
+        return $detalle;
+    }
+
+    protected function enriquecerProductosConStockHabitacion($productos)
+    {
+        $stocksHabitaciones = stockHabitacion::select('producto_id', DB::raw('SUM(cantidad) as cantidad'))
+            ->where('estado', 1)
+            ->groupBy('producto_id')
+            ->pluck('cantidad', 'producto_id');
+
+        return collect($productos)->map(function ($producto) use ($stocksHabitaciones) {
+            $stockHabitacion = (float) ($stocksHabitaciones[$producto->id] ?? 0);
+            $producto->stock_general = (float) $producto->stock;
+            $producto->stock_habitacion = $stockHabitacion;
+            $producto->stock_total = (float) $producto->stock + $stockHabitacion;
+
+            return $producto;
+        });
+    }
+
+    protected function obtenerHabitacionesActivas()
+    {
+        return Habitacion::where('estado', 1)->orderBy('numero', 'asc')->get();
     }
 }

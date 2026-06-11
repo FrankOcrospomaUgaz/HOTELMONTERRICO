@@ -42,37 +42,90 @@ class detallMovimientoController extends Controller
      */
     public function store(Request $request)
     {
-
         $tableDataJSON = $request->input('tableData');
-
-        // Convierte el JSON en un arreglo PHP
         $tableData = json_decode($tableDataJSON, true);
+        $movimiento = Movimiento::findOrFail($request->input('idMovimiento'));
+        $habitacion = Habitacion::findOrFail($movimiento->habitacion_id);
 
-        foreach ($tableData as $detalleMov) {
+        try {
+            $resultado = DB::transaction(function () use ($tableData, $movimiento, $habitacion) {
+                $agrupadoPorProducto = [];
 
-            $nombreSinEspacios = preg_replace('/\s+/', '', $detalleMov['nombre']);
+                foreach ($tableData as $detalleMov) {
+                    $productoId = $detalleMov['id'] ?? null;
+                    if (!$productoId) {
+                        $nombreSinEspacios = preg_replace('/\s+/', '', $detalleMov['nombre']);
+                        $producto = Producto::whereRaw("REPLACE(nombre, ' ', '') REGEXP '^" . $nombreSinEspacios . "$'")->first();
+                    } else {
+                        $producto = Producto::find($productoId);
+                    }
 
-            $producto = Producto::whereRaw("REPLACE(nombre, ' ', '') REGEXP '^" . $nombreSinEspacios . "$'")->first();
+                    if (!$producto) {
+                        throw new \RuntimeException('No se encontró el producto ' . $detalleMov['nombre']);
+                    }
 
-            $detalleMovimiento = Detallemovimiento::create([
-                'movimiento_id' => $request->input('idMovimiento'),
-                'cantidad' => $detalleMov['cantidad'],
-                'precioventa' => $producto->precioventa,
-                'preciocompra' => $producto->preciocompra,
-                'descuento' => 0.00,
-                'motivos_doc_almacens_id' => 10, //VENTA PRODUCTO
-                'producto_id' => $producto->id,
-                'comentario' => '',
-            ]);
-            $producto->stock = $producto->stock - $detalleMov['cantidad'];
-            $producto->save();
+                    $cantidad = (float) $detalleMov['cantidad'];
+                    $agrupadoPorProducto[$producto->id] = ($agrupadoPorProducto[$producto->id] ?? 0) + $cantidad;
+                }
+
+                foreach ($agrupadoPorProducto as $productoId => $cantidadTotal) {
+                    $stockHabitacion = $this->obtenerStockHabitacionProducto((int) $productoId, (int) $habitacion->id);
+
+                    if ($stockHabitacion < $cantidadTotal) {
+                        $producto = Producto::find($productoId);
+                        throw new \RuntimeException('El producto ' . $producto->nombre . ' no tiene stock suficiente en la habitación ' . $habitacion->numero . '.');
+                    }
+                }
+
+                $ultimaDetalle = null;
+                $ultimoProducto = null;
+
+                foreach ($tableData as $detalleMov) {
+                    $productoId = $detalleMov['id'] ?? null;
+                    if ($productoId) {
+                        $producto = Producto::find($productoId);
+                    } else {
+                        $nombreSinEspacios = preg_replace('/\s+/', '', $detalleMov['nombre']);
+                        $producto = Producto::whereRaw("REPLACE(nombre, ' ', '') REGEXP '^" . $nombreSinEspacios . "$'")->first();
+                    }
+
+                    if (!$producto) {
+                        throw new \RuntimeException('No se encontró el producto ' . $detalleMov['nombre']);
+                    }
+
+                    $cantidad = (float) $detalleMov['cantidad'];
+
+                    $detalleMovimiento = Detallemovimiento::create([
+                        'movimiento_id' => $movimiento->id,
+                        'cantidad' => $cantidad,
+                        'precioventa' => $producto->precioventa,
+                        'preciocompra' => $producto->preciocompra,
+                        'descuento' => 0.00,
+                        'motivos_doc_almacens_id' => 10, //VENTA PRODUCTO
+                        'producto_id' => $producto->id,
+                        'comentario' => '',
+                    ]);
+
+                    $this->decrementarStockHabitacion($producto->id, $habitacion->id, $cantidad);
+                    $ultimaDetalle = $detalleMovimiento;
+                    $ultimoProducto = $producto;
+                }
+
+                return [
+                    'detalleMovimiento' => $ultimaDetalle,
+                    'servicio' => $ultimoProducto,
+                ];
+            });
+
+            return response()->json($resultado);
+        } catch (\RuntimeException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'errors' => [
+                    'cantidadProducto' => [$e->getMessage()],
+                ],
+            ], 422);
         }
-
-        $datosRecuperado = [
-            'detalleMovimiento' => $detalleMovimiento,
-            'servicio' => $producto,
-        ];
-        return response()->json($datosRecuperado);
 
     }
 
@@ -215,10 +268,17 @@ class detallMovimientoController extends Controller
 
         $movimiento = Detallemovimiento::find($id);
         $producto = Producto::find($movimiento->producto_id);
+        $movimientoPadre = Movimiento::find($movimiento->movimiento_id);
+        $stockHabitacionDisponible = 0;
+
+        if ($movimientoPadre && $movimientoPadre->habitacion_id) {
+            $stockHabitacionDisponible = $this->obtenerStockHabitacionProducto($producto->id, (int) $movimientoPadre->habitacion_id);
+        }
 
         $datosRecuperados = [
             'movimiento' => $movimiento,
             'producto' => $producto,
+            'stockHabitacionDisponible' => $stockHabitacionDisponible,
         ];
 
         return response()->json($datosRecuperados);
@@ -226,16 +286,40 @@ class detallMovimientoController extends Controller
 
     public function updateCantIdProd(Request $request, $id)
     {
+        $Dmovimiento = Detallemovimiento::findOrFail($id);
+        $movimiento = Movimiento::findOrFail($Dmovimiento->movimiento_id);
+        $habitacion = Habitacion::findOrFail($movimiento->habitacion_id);
+        $cantTenia = (float) $Dmovimiento->cantidad;
+        $nuevaCantidad = (float) $request->input('cantidadProductoEd');
+        $delta = $nuevaCantidad - $cantTenia;
+        $producto = Producto::findOrFail($Dmovimiento->producto_id);
 
-        $Dmovimiento = Detallemovimiento::find($id);
-        $cantTenia = $Dmovimiento->cantidad;
-        $Dmovimiento->cantidad = $request->input('cantidadProductoEd');
-        $Dmovimiento->comentario = $request->input('notaProductoE');
-        $Dmovimiento->save();
+        if ($delta > 0) {
+            $stockDisponible = $this->obtenerStockHabitacionProducto($producto->id, $habitacion->id);
+            if ($stockDisponible < $delta) {
+                return response()->json([
+                    'message' => 'No existe stock suficiente en la habitación.',
+                    'errors' => [
+                        'cantidadProductoEd' => ['No existe stock suficiente en la habitación.'],
+                    ],
+                ], 422);
+            }
+        }
 
-        $producto = Producto::find($Dmovimiento->producto_id);
-        $producto->stock = $producto->stock - $request->input('cantidadProductoEd') + $cantTenia;
-        $producto->save();
+        DB::transaction(function () use ($Dmovimiento, $request, $delta, $producto, $habitacion) {
+            $cantTenia = (float) $Dmovimiento->cantidad;
+            $nuevaCantidad = (float) $request->input('cantidadProductoEd');
+
+            if ($delta > 0) {
+                $this->decrementarStockHabitacion($producto->id, $habitacion->id, $delta);
+            } elseif ($delta < 0) {
+                $this->incrementarStockHabitacion($producto->id, $habitacion->id, abs($delta));
+            }
+
+            $Dmovimiento->cantidad = $nuevaCantidad;
+            $Dmovimiento->comentario = $request->input('notaProductoE');
+            $Dmovimiento->save();
+        });
 
         return response('Exito');
     }
@@ -374,15 +458,18 @@ class detallMovimientoController extends Controller
     public function destroy($id)
     {
         $detalleMov = Detallemovimiento::findOrFail($id);
-        $detalleMov->estado = 0; //eliminado pero se suma denuevo
-        $detalleMov->save();
-        $detalleMov->delete();
+        $movimiento = Movimiento::findOrFail($detalleMov->movimiento_id);
+        $habitacion = Habitacion::findOrFail($movimiento->habitacion_id);
 
-        if ($detalleMov->producto_id) {
-            $producto = Producto::find($detalleMov->producto_id);
-            $producto->stock = $producto->stock + $detalleMov->cantidad;
-            $producto->save();
-        }
+        DB::transaction(function () use ($detalleMov, $habitacion) {
+            if ($detalleMov->producto_id) {
+                $this->incrementarStockHabitacion($detalleMov->producto_id, $habitacion->id, (float) $detalleMov->cantidad);
+            }
+
+            $detalleMov->estado = 0;
+            $detalleMov->save();
+            $detalleMov->delete();
+        });
 
         return response($id);
     }

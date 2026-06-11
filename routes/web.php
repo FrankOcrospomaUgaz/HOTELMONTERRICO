@@ -97,6 +97,11 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('catProductos/create', 'App\Http\Controllers\productoController@create')->name('catProductos.create');
     Route::get('catProductos/show', 'App\Http\Controllers\productoController@show');
     Route::get('catProductos/showId/{id}', 'App\Http\Controllers\productoController@showId')->name('catProductos.showId');;
+    Route::get('catProductos/showHabitacion/{numHabitacion}', 'App\Http\Controllers\productoController@showHabitacion')->name('catProductos.showHabitacion');
+    Route::get('catProductos/stockHabitacion/{productoId}/{numHabitacion}', 'App\Http\Controllers\productoController@stockHabitacion')->name('catProductos.stockHabitacion');
+    Route::post('stockProductos/repartir/{id}', 'App\Http\Controllers\productoController@repartirStockHabitaciones')->name('stockProductos.repartir');
+    Route::get('stockProductos/distribucion/{id}', 'App\Http\Controllers\productoController@distribucionProducto')->name('stockProductos.distribucion');
+    Route::post('stockProductos/transferir/{id}', 'App\Http\Controllers\productoController@transferirStockHabitacion')->name('stockProductos.transferir');
 
     Route::resource('vistaPrincipal', 'App\Http\Controllers\vistaPrincipalController');
     Route::get('vistaPrincipal/show', 'App\Http\Controllers\vistaPrincipalController@show');

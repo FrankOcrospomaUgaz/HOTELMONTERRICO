@@ -125,7 +125,15 @@ var columnsP = [
         },
         orderable: false,
     },{
-        data: "stock",
+        data: "stock_general",
+        orderable: false,
+    },
+    {
+        data: "stock_habitacion",
+        orderable: false,
+    },
+    {
+        data: "stock_total",
         orderable: false,
     },
     {
@@ -134,6 +142,11 @@ var columnsP = [
             var date = new Date(data);
             return date.toLocaleString();
         },
+    },
+    {
+        data: "action",
+        orderable: false,
+        searchable: false,
     },
     
 ];
@@ -161,7 +174,7 @@ var butomnsProd = [
         text: 'COPY <i class="fa-solid fa-copy"></i>',
         className: "btn-secondary copy",
         exportOptions: {
-            columnsP: [0, 1, 2, 3,4,5,6,7,8], // las columnas que se exportarán
+            columns: [0, 1, 2, 3,4,5,6,7,8,9,10,11], // las columnas que se exportarán
         },
     },
     {
@@ -169,7 +182,7 @@ var butomnsProd = [
         text: 'CSV <i class="fa-solid fa-file-csv"></i>',
         className: "btn-info csv ",
         exportOptions: {
-            columnsP: [0, 1, 2, 3,4,5,6,7,8], // las columnas que se exportarán
+            columns: [0, 1, 2, 3,4,5,6,7,8,9,10,11], // las columnas que se exportarán
         },
     },
     {
@@ -177,7 +190,7 @@ var butomnsProd = [
         text: 'EXCEL <i class="fas fa-file-excel"></i>',
         className: "excel btn-success",
         exportOptions: {
-            columnsP: [0, 1, 2, 3,4,5,6,7,8], // las columnas que se exportarán
+            columns: [0, 1, 2, 3,4,5,6,7,8,9,10,11], // las columnas que se exportarán
         },
     },
     {
@@ -186,7 +199,7 @@ var butomnsProd = [
         text: 'PDF <i class="far fa-file-pdf"></i>',
         className: "btn-danger pdf",
         exportOptions: {
-            columnsP: [0, 1, 2, 3,4,5,6,7,8], // las columnas que se exportarán
+            columns: [0, 1, 2, 3,4,5,6,7,8,9,10,11], // las columnas que se exportarán
         },
     },
     // {
@@ -291,9 +304,296 @@ var table = $("#tbProductoStock").DataTable({
 
 });
 
+var repartoRapidoHabitaciones = [];
 
+function actualizarResumenRepartoRapido() {
+    var seleccionadas = $(".habitacion-reparto-check:checked").length;
+    $("#repartoRapidoSeleccionadas").text(seleccionadas);
 
+    var cantidad = parseInt($("#cantidadPorHabitacionRapido").val(), 10);
+    if (isNaN(cantidad) || cantidad < 1) {
+        cantidad = 1;
+    }
 
+    $("#repartoRapidoCantidadPreview").text(cantidad);
+    if (cantidad > 1) {
+        $("#repartoRapidoModoContainer").removeClass("d-none");
+    } else {
+        $("#repartoRapidoModoContainer").addClass("d-none");
+        $("#repartoRapidoExacto").prop("checked", false);
+    }
+}
 
+function renderRepartoRapidoHabitaciones() {
+    var html = "";
 
+    repartoRapidoHabitaciones.forEach(function (habitacion) {
+        var badge = habitacion.tiene_stock
+            ? '<span class="badge bg-warning text-dark">Ya tiene stock</span>'
+            : '<span class="badge bg-secondary">Sin stock</span>';
 
+        html +=
+            '<tr>' +
+                '<td class="text-center"><input type="checkbox" class="form-check-input habitacion-reparto-check" value="' + habitacion.id + '" checked></td>' +
+                '<td>Habitacion ' + habitacion.numero + '</td>' +
+                '<td>' + habitacion.situacion + '</td>' +
+                '<td class="text-center">' + habitacion.stock + ' ' + badge + '</td>' +
+            '</tr>';
+    });
+
+    if (!html) {
+        html = '<tr><td colspan="4" class="text-center text-muted">No hay habitaciones activas.</td></tr>';
+    }
+
+    $("#tablaRepartoRapidoStock").html(html);
+    actualizarResumenRepartoRapido();
+}
+
+window.repartirStockHabitacion = function (id, nombre) {
+    $.get("stockProductos/distribucion/" + id, function (data) {
+        $("#repartoRapidoProductoId").val(data.producto.id);
+        $("#modalRepartoRapidoStockLabel").text("REPARTO RAPIDO DE STOCK - " + data.producto.nombre);
+        $("#repartoRapidoProductoNombre").text(data.producto.nombre);
+        $("#repartoRapidoGeneral").text(data.stock_general);
+        $("#repartoRapidoHabitaciones").text(data.stock_habitaciones);
+        $("#repartoRapidoTotal").text(data.stock_total);
+        $("#cantidadPorHabitacionRapido").val(1);
+        $("#repartoRapidoExacto").prop("checked", false);
+        $("#repartoRapidoSeleccionadas").text(0);
+        $("#repartoRapidoCantidadPreview").text(1);
+
+        repartoRapidoHabitaciones = data.habitaciones || [];
+        renderRepartoRapidoHabitaciones();
+        $("#modalRepartoRapidoStock").modal("show");
+    }).fail(function () {
+        Swal.fire({
+            icon: "error",
+            title: "No se pudo cargar",
+            text: "No fue posible obtener la distribucion del producto.",
+        });
+    });
+};
+
+window.verDistribucionStock = function (id, nombre) {
+    $.get("stockProductos/distribucion/" + id, function (data) {
+        $("#productoDistribucionId").val(data.producto.id);
+        $("#modalDistribucionStockLabel").text("DISTRIBUCION DE STOCK - " + data.producto.nombre);
+        $("#productoDistribucionNombre").text(data.producto.nombre);
+        $("#productoDistribucionGeneral").text(data.stock_general);
+        $("#productoDistribucionHabitaciones").text(data.stock_habitaciones);
+        $("#productoDistribucionTotal").text(data.stock_total);
+
+        $("#habitacionDestinoStock").html("");
+        $("#tablaDistribucionStock").html("");
+
+        $.each(data.habitaciones, function (index, habitacion) {
+            var badge = habitacion.tiene_stock
+                ? '<span class="badge bg-success">Con stock</span>'
+                : '<span class="badge bg-secondary">Sin stock</span>';
+
+            $("#tablaDistribucionStock").append(
+                "<tr>" +
+                    "<td>" + habitacion.numero + "</td>" +
+                    "<td>" + habitacion.situacion + "</td>" +
+                    "<td>" + habitacion.stock + "</td>" +
+                    "<td>" + badge + "</td>" +
+                    "<td><button type='button' class='btn btn-sm btn-outline-primary btn-mover-rapido' data-id='" + habitacion.id + "'>Mover</button></td>" +
+                "</tr>"
+            );
+
+            $("#habitacionDestinoStock").append(
+                "<option value='" + habitacion.id + "'>Habitacion " + habitacion.numero + " (" + (habitacion.tiene_stock ? "Con stock" : "Sin stock") + ")</option>"
+            );
+        });
+
+        if ($("#habitacionDestinoStock option").length > 0) {
+            $("#habitacionDestinoStock").prop("selectedIndex", 0);
+        }
+
+        $("#modalDistribucionStock").modal("show");
+    }).fail(function () {
+        Swal.fire({
+            icon: "error",
+            title: "No se pudo cargar",
+            text: "No fue posible obtener la distribucion del producto.",
+        });
+    });
+};
+
+$(document).on("change", ".habitacion-reparto-check", function () {
+    actualizarResumenRepartoRapido();
+});
+
+$("#cantidadPorHabitacionRapido").on("input change", function () {
+    actualizarResumenRepartoRapido();
+});
+
+$("#btnMarcarTodasHabitaciones").on("click", function () {
+    $(".habitacion-reparto-check").prop("checked", true);
+    actualizarResumenRepartoRapido();
+});
+
+$("#btnDesmarcarTodasHabitaciones").on("click", function () {
+    $(".habitacion-reparto-check").prop("checked", false);
+    actualizarResumenRepartoRapido();
+});
+
+$(document).on("click", ".btn-mover-rapido", function () {
+    $("#habitacionDestinoStock").val($(this).data("id"));
+});
+
+$("#formTransferirStock").on("submit", function (e) {
+    e.preventDefault();
+
+    var idProducto = $("#productoDistribucionId").val();
+    var habitacionId = $("#habitacionDestinoStock").val();
+    var cantidad = parseFloat($("#cantidadTransferirStock").val());
+
+    if (!idProducto) {
+        Swal.fire({
+            icon: "warning",
+            title: "Datos incompletos",
+            text: "No se pudo identificar el producto.",
+        });
+        return;
+    }
+
+    if (!habitacionId) {
+        Swal.fire({
+            icon: "warning",
+            title: "Selecciona una habitacion",
+            text: "Debes elegir una habitacion destino.",
+        });
+        return;
+    }
+
+    if (isNaN(cantidad) || cantidad < 1) {
+        Swal.fire({
+            icon: "warning",
+            title: "Cantidad invalida",
+            text: "La cantidad debe ser mayor a cero.",
+        });
+        return;
+    }
+
+    $.ajax({
+        type: "POST",
+        url: "stockProductos/transferir/" + idProducto,
+        data: {
+            _token: $('meta[name="csrf-token"]').attr("content"),
+            habitacion_id: habitacionId,
+            cantidad: cantidad,
+        },
+        success: function (data) {
+            Swal.fire({
+                icon: "success",
+                title: "Stock movido",
+                html:
+                    "<strong>Producto:</strong> " + data.producto +
+                    "<br><strong>Habitacion:</strong> " + data.habitacion +
+                    "<br><strong>Almacen general:</strong> " + data.stock_general +
+                    "<br><strong>Stock de la habitacion:</strong> " + data.stock_habitacion +
+                    "<br><strong>Almacen habitaciones:</strong> " + data.stock_habitaciones +
+                    "<br><strong>Total:</strong> " + data.stock_total,
+            });
+
+            $("#modalDistribucionStock").modal("hide");
+            $("#tbProductoStock").DataTable().ajax.reload(null, false);
+        },
+        error: function (xhr) {
+            Swal.fire({
+                icon: "error",
+                title: "No se pudo mover",
+                text: xhr.responseJSON && xhr.responseJSON.message
+                    ? xhr.responseJSON.message
+                    : "Ocurrio un error al mover el stock.",
+            });
+        },
+    });
+});
+
+$("#formRepartoRapidoStock").on("submit", function (e) {
+    e.preventDefault();
+
+    var idProducto = $("#repartoRapidoProductoId").val();
+    var cantidad = parseInt($("#cantidadPorHabitacionRapido").val(), 10);
+    var distribucionExacta = $("#repartoRapidoExacto").is(":checked") ? 1 : 0;
+    var habitacionesIds = $(".habitacion-reparto-check:checked").map(function () {
+        return $(this).val();
+    }).get();
+
+    if (!idProducto) {
+        Swal.fire({
+            icon: "warning",
+            title: "Datos incompletos",
+            text: "No se pudo identificar el producto.",
+        });
+        return;
+    }
+
+    if (isNaN(cantidad) || cantidad < 1) {
+        Swal.fire({
+            icon: "warning",
+            title: "Cantidad invalida",
+            text: "La cantidad por habitacion debe ser mayor a cero.",
+        });
+        return;
+    }
+
+    if (!habitacionesIds.length) {
+        Swal.fire({
+            icon: "warning",
+            title: "Sin habitaciones",
+            text: "Selecciona al menos una habitacion para repartir.",
+        });
+        return;
+    }
+
+    $.ajax({
+        type: "POST",
+        url: "stockProductos/repartir/" + idProducto,
+        data: {
+            _token: $('meta[name="csrf-token"]').attr("content"),
+            cantidad_por_habitacion: cantidad,
+            distribucion_exacta: distribucionExacta,
+            habitaciones_ids: habitacionesIds,
+        },
+        success: function (data) {
+            var repartidas = data.repartidas && data.repartidas.length ? data.repartidas.join(", ") : "Ninguna";
+            var sinStock = data.sin_stock && data.sin_stock.length ? data.sin_stock.join(", ") : "Ninguna";
+            var parciales = data.parciales && data.parciales.length ? data.parciales.join(", ") : "Ninguna";
+            var modo = data.distribucion_exacta ? "exacto" : "proporcional";
+
+            Swal.fire({
+                icon: "success",
+                title: "Stock repartido",
+                html:
+                    "<strong>Producto:</strong> " + data.producto +
+                    "<br><strong>Modo:</strong> " + modo +
+                    "<br><strong>Cantidad por habitacion:</strong> " + data.cantidad_por_habitacion +
+                    "<br><strong>Almacen general:</strong> " + data.stock_general +
+                    "<br><strong>Almacen habitaciones:</strong> " + data.stock_habitacion +
+                    "<br><strong>Total:</strong> " + data.stock_total +
+                    "<br><strong>Habitaciones repartidas:</strong> " + repartidas +
+                    "<br><strong>Habitaciones parciales:</strong> " + parciales +
+                    "<br><strong>Habitaciones sin stock:</strong> " + sinStock,
+            });
+
+            $("#modalRepartoRapidoStock").modal("hide");
+            $("#tbProductoStock").DataTable().ajax.reload(null, false);
+        },
+        error: function (xhr) {
+            Swal.fire({
+                icon: "error",
+                title: "No se pudo repartir",
+                text: xhr.responseJSON && xhr.responseJSON.message
+                    ? xhr.responseJSON.message
+                    : "Ocurrio un error al repartir el stock.",
+            });
+        },
+    });
+});
+
+$("#modalRepartoRapidoStock").on("shown.bs.modal", function () {
+    actualizarResumenRepartoRapido();
+});

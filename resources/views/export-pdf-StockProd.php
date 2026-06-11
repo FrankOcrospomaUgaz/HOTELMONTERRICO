@@ -118,8 +118,9 @@
             <table class="table text-center">
                 <tr>
                     <th>Nombre</th>
-
-                    <th><b>Stock</b></th>
+                    <th><b>General</b></th>
+                    <th><b>Habitaciones</b></th>
+                    <th><b>Total</b></th>
                 </tr>
 
 
@@ -130,14 +131,18 @@ foreach ($Productos as $movimiento): ?>
 
                 <tr>
                     <td class="centroText data-cell"><?php echo $movimiento->nombre; ?></td>
-                    <td class="centroText data-cell"><?php echo $movimiento->stock; ?></td>
+                    <td class="centroText data-cell"><?php echo $movimiento->stock_general; ?></td>
+                    <td class="centroText data-cell"><?php echo $movimiento->stock_habitacion; ?></td>
+                    <td class="centroText data-cell"><?php echo $movimiento->stock_total; ?></td>
 
                 </tr>
                 <?php
 
     endforeach;?>
 
-<tr>
+                <tr>
+                    <td class="centroText data-cell"></td>
+                    <td class="centroText data-cell"></td>
                     <td class="centroText data-cell"></td>
                     <td class="centroText data-cell"></td>
 
@@ -145,7 +150,7 @@ foreach ($Productos as $movimiento): ?>
 
                 <?php } else {?>
                 <tr>
-                    <td class="centroText data-cell" colspan="2">No hubieron Movimientos de Salida</td>
+                    <td class="centroText data-cell" colspan="4">No hubieron Movimientos de Salida</td>
                 </tr>
 
                 <?php }?>

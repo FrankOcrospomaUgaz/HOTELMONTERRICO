@@ -99,8 +99,10 @@
 
 
                 <div class="cajaProductos d-none">
-                    <h4 class="text-decoration-underline fw-normal">Productos <i class="fa-solid fa-plus agregar"
-                            id="agregarProducto" style="color: #ff1414;"></i></h4>
+                    <h4 class="text-decoration-underline fw-normal d-flex align-items-center gap-2">
+                        <span>Productos</span>
+                        <i class="fa-solid fa-plus agregar" id="agregarProducto" style="color: #ff1414;"></i>
+                    </h4>
                     <div class="formatoTabla mb-4">
                         <table class="table">
                             <thead id="theadProductos">
@@ -292,7 +294,7 @@
 <script src="{{ asset('js/JqueryVentaHabitacion/JqueryDestroyMovimiento.js') }}"></script>
 <script src="{{ asset('js/JqueryVentaHabitacion/JqueryDestroyProducto.js') }}"></script>
 <script src="{{ asset('js/JqueryVentaHabitacion/JqueryDestroyServicio.js') }}"></script>
-<script src="{{ asset('js/JqueryVentaHabitacion/JqueryAgregarProducto.js') }}"></script>
+<script src="{{ asset('js/JqueryVentaHabitacion/JqueryAgregarProducto.js') }}?v=20260610-1"></script>
 <script src="{{ asset('js/JqueryVentaHabitacion/JqueryAgregarServicio.js') }}"></script>
 
 

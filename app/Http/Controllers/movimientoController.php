@@ -65,7 +65,6 @@ class movimientoController extends Controller
 
     public function showId($id)
     {
-
         return response()->json(Movimiento::find($id));
     }
 
@@ -96,10 +95,10 @@ class movimientoController extends Controller
     {
         $MovimientoVenta = Movimiento::findOrFail($id);
         $totalEnviado = floatval($request->input('pagoPlin')) +
-        floatval($request->input('pagoEfectivo')) +
-        floatval($request->input('pagoTarjeta')) +
-        floatval($request->input('pagoYape')) +
-        floatval($request->input('pagoDeposito'));
+            floatval($request->input('pagoEfectivo')) +
+            floatval($request->input('pagoTarjeta')) +
+            floatval($request->input('pagoYape')) +
+            floatval($request->input('pagoDeposito'));
         $persona = Persona::where('id', $request->input('clientes'))->first();
 
         if ($totalEnviado <= 0) {
@@ -117,16 +116,18 @@ class movimientoController extends Controller
         }
 
         if ($totalEnviado >= $MovimientoVenta->total) {
-
-            //MOVIMIENTO DE CAJA INGREO
-
             $numeroDocumento = $request->input('numTipoDocumento');
-
             $movimientoExistente = Movimiento::where('numero', $numeroDocumento)->first();
-
             $persona = Persona::where('id', $request->input('clientes'))->first();
 
             if ($movimientoExistente == null) {
+                $habitacion = Habitacion::where('id', $MovimientoVenta->habitacion_id)->first();
+                $stockLiberado = [];
+
+                if ($habitacion) {
+                    $stockLiberado = $this->liberarStockHabitacion($habitacion->id);
+                }
+
                 $MovimientoVenta->fechasalida = Carbon::now()->format('Y-m-d H:i:s');
                 $MovimientoVenta->plin = $request->input('pagoPlin');
                 $MovimientoVenta->efectivo = $request->input('pagoEfectivo');
@@ -138,12 +139,13 @@ class movimientoController extends Controller
                 $MovimientoVenta->estado = '0';
                 $MovimientoVenta->save();
 
-                $habitacion = Habitacion::where('id', $MovimientoVenta->habitacion_id)->first();
-                $habitacion->situacion = 'Limpieza';
-                $habitacion->horaInicio = null;
-                $habitacion->total = 0.00;
-                $habitacion->idUltimoMovimiento = null; // SIN MOVIMIENTO ATENCIÓN HASTA QUE VUELVA A CREARSE
-                $habitacion->save();
+                if ($habitacion) {
+                    $habitacion->situacion = 'Limpieza';
+                    $habitacion->horaInicio = null;
+                    $habitacion->total = 0.00;
+                    $habitacion->idUltimoMovimiento = null; // SIN MOVIMIENTO ATENCIÃ“N HASTA QUE VUELVA A CREARSE
+                    $habitacion->save();
+                }
 
                 $movimientoCaja = Movimiento::create([
                     'fecha' => Carbon::now()->format('Y-m-d H:i:s'),
@@ -151,23 +153,19 @@ class movimientoController extends Controller
                     'usuario_id' => Auth::user()->id,
                     'total' => $MovimientoVenta->total,
                     'vuelto' => $totalEnviado - $MovimientoVenta->total,
-                    'tipodocumento_id' => '6', //INGRESO
-                    'conceptopago_id' => '4', //PAGO CLIENTE
-                    'comentario' => $request->input('comentario'), //PAGO CLIENTE
+                    'tipodocumento_id' => '6',
+                    'conceptopago_id' => '4',
+                    'comentario' => $request->input('comentario'),
                     'movimiento_id' => $MovimientoVenta->id,
-
                     'yape' => $MovimientoVenta->yape,
                     'efectivo' => $MovimientoVenta->efectivo,
                     'tarjeta' => $MovimientoVenta->tarjeta,
                     'deposito' => $MovimientoVenta->deposito,
                     'plin' => $MovimientoVenta->plin,
-
                     'numero' => $request->input('numTipoDocumento'),
                 ]);
 
                 $movimientoCaja->save();
-
-                // $detalleMovimientos=Detallemovimiento::where('movimiento_id',$movimientoCaja->movimiento_id)->where('estado',1)->get();
 
                 $detalleVentas = DB::select('call detalleMovimientosCarrito(?)', [$movimientoCaja->movimiento_id]);
 
@@ -185,13 +183,13 @@ class movimientoController extends Controller
                     'detalleMovimientos' => $detalleVentas,
                     'direccion' => $persona->direccion,
                     "tipoDocumento" => $MovimientoVenta->tipodocumento_id,
+                    'stockLiberado' => $stockLiberado,
                     'mensaje' => 'exito',
                 ];
                 return response()->json($datosUsuarios);
             } else {
                 return response('error');
             }
-
         } else {
             return response('error');
         }
@@ -203,7 +201,6 @@ class movimientoController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-
     public function destroy($id)
     {
         $Movimiento = Movimiento::findOrFail($id);
@@ -212,28 +209,34 @@ class movimientoController extends Controller
             ->whereNotNull('producto_id')
             ->get();
 
-        foreach ($detalleMovimientos as $detalle) {
-            $producto = Producto::find($detalle->producto_id);
+        DB::transaction(function () use ($Movimiento, $detalleMovimientos) {
+            foreach ($detalleMovimientos as $detalle) {
+                $producto = Producto::find($detalle->producto_id);
+                if ($producto) {
+                    $producto->stock = $producto->stock + $detalle->cantidad;
+                    $producto->save();
+                }
+            }
 
-            $producto->stock = $producto->stock + $detalle->cantidad;
+            if ($Movimiento->habitacion_id) {
+                $habitacion = Habitacion::where('id', $Movimiento->habitacion_id)->first();
+                if ($habitacion) {
+                    $this->liberarStockHabitacion($habitacion->id);
+                    $habitacion->situacion = 'Disponible';
+                    $habitacion->horaInicio = null;
+                    $habitacion->total = 0.00;
+                    $habitacion->idUltimoMovimiento = null;
+                    $habitacion->save();
+                }
+            }
 
-            $producto->save();
-        }
+            $Movimiento->fechasalida = Carbon::now()->format('Y-m-d H:i:s');
+            $Movimiento->estado = 0;
+            $Movimiento->situacion = 'Eliminado';
+            $Movimiento->save();
 
-        $habitacion = Habitacion::where('id', $Movimiento->habitacion_id)->first();
-        $habitacion->situacion = 'Disponible';
-        $habitacion->horaInicio = null;
-        $habitacion->total = 0.00;
-        $habitacion->idUltimoMovimiento = null; // SIN MOVIMIENTO ATENCIÓN HASTA QUE VUELVA A CREARSE
-
-        $habitacion->save();
-        $Movimiento->fechasalida = Carbon::now()->format('Y-m-d H:i:s');
-        $Movimiento->estado = 0; //eliminado
-        $Movimiento->situacion = 'Eliminado'; //eliminado
-        $Movimiento->save();
-
-        $Movimiento->delete();
-
+            $Movimiento->delete();
+        });
     }
 
     public function send(string $to = '', string $subject = '', string $body = '')
@@ -292,7 +295,7 @@ class movimientoController extends Controller
             abort(500, 'Error al enviar e-mail');
         }
 
-// -------------3
+        // -------------3
         $fieldsCorreoDosTres = [
             "token" => "qusEj_w7aHEpX",
             "to" => [
@@ -318,16 +321,5 @@ class movimientoController extends Controller
         }
 
         return $datos;
-    }
-
-    public function showEgresos(Request $request)
-    {
-        if ($request->ajax()) {
-            $movimientosCajaEgresos = DB::select('CALL showEgresos(?, ?)', array(null, null));
-
-            return datatables($movimientosCajaEgresos)
-                ->make(true);
-        } else {
-        }
     }
 }

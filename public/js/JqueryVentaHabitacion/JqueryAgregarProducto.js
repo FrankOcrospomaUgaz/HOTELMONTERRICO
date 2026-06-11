@@ -3,6 +3,15 @@ $(document).ready(function () {
     var total = 0;
     var cantidad = 1;
 
+    function obtenerCantidadEnCarrito(productoId) {
+        return carrito.reduce(function (acumulado, item) {
+            if (parseInt(item.id) === parseInt(productoId)) {
+                return acumulado + parseInt(item.cantidad);
+            }
+            return acumulado;
+        }, 0);
+    }
+
     function actualizarTabla() {
         // Vaciar el cuerpo de la tabla.
         $("#carrito-body").html("");
@@ -10,7 +19,9 @@ $(document).ready(function () {
         // Iterar a través de los productos en el carrito y agregarlos a la tabla.
         carrito.forEach(function (producto) {
             $("#carrito-body").append(
-                "<tr ><td>" +
+                "<tr data-id='" +
+                    producto.id +
+                    "'><td>" +
                     producto.nombre +
                     "</td><td>S/ " +
                     producto.precio.toFixed(2) +
@@ -25,17 +36,204 @@ $(document).ready(function () {
         // Actualizar el total.
         $("#total").text("S/ " + total.toFixed(2));
     }
+
+    function getProductosEnTablaHabitacion() {
+        var productos = [];
+
+        $(".listaProductos tr").each(function () {
+            var fila = $(this);
+            var productoId = fila.data("producto-id");
+            var nombre = fila.data("producto-nombre") || fila.find("td:eq(1)").text();
+
+            if (productoId) {
+                productos.push({
+                    id: productoId,
+                    nombre: nombre,
+                });
+            }
+        });
+
+        return productos;
+    }
+
+    function actualizarResumenProductoModal(precio, stockGeneral, stockHabitacion) {
+        var precioFormateado = parseFloat(precio || 0).toFixed(2);
+        var stockGeneralFormateado = parseFloat(stockGeneral || 0);
+        var stockHabitacionFormateado = parseFloat(stockHabitacion || 0);
+
+        $("#precioProducto").val(precioFormateado);
+        $("#precioProductoDisplay").text(precioFormateado);
+        $("#stockGeneralProductoDisplay").text(stockGeneralFormateado);
+        $("#stockHabitacionProducto").val(stockHabitacionFormateado);
+        $("#stockHabitacionProductoDisplay").text(stockHabitacionFormateado);
+        $("#stockHabitacionTexto").text("Stock disponible en la habitacion: " + stockHabitacionFormateado);
+    }
+
+    function refrescarResumenProductoSeleccionado() {
+        var productoId = $("#productos").val();
+
+        if (!productoId) {
+            actualizarResumenProductoModal(0, 0, 0);
+            return;
+        }
+
+        $.get("catProductos/showId/" + productoId, function (dataProducto) {
+            var stockHabitacionActual = parseFloat(
+                $("#productos option[value='" + productoId + "']").attr("data-stock")
+            ) || 0;
+
+            actualizarResumenProductoModal(
+                dataProducto.precioventa,
+                dataProducto.stock,
+                stockHabitacionActual
+            );
+        });
+    }
+
+    function reponerDesdeGeneral(productoId, nombreProducto, cantidadSolicitada) {
+        var habitacionId = $("#numHabitacion").val();
+        var cantidad = parseInt(cantidadSolicitada, 10);
+
+        if (!productoId) {
+            Swal.fire({
+                icon: "warning",
+                title: "Producto no valido",
+                text: "No se pudo identificar el producto para reponer.",
+            });
+            return;
+        }
+
+        if (isNaN(cantidad) || cantidad < 1) {
+            Swal.fire({
+                icon: "warning",
+                title: "Cantidad invalida",
+                text: "La cantidad debe ser mayor a cero.",
+            });
+            return;
+        }
+
+        $.get("catProductos/showId/" + productoId, function (dataProducto) {
+            var stockGeneralActual = parseFloat(dataProducto.stock || 0);
+
+            if (cantidad > stockGeneralActual) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Stock insuficiente",
+                    text: "No hay suficiente stock general para reponer esa cantidad.",
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: "Reponer desde general",
+                text: "Se moveran " + cantidad + " unidades de " + nombreProducto + " a la habitacion actual.",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonText: "Reponer",
+                cancelButtonText: "Cancelar",
+            }).then(function (result) {
+                if (!result.isConfirmed) {
+                    return;
+                }
+
+                $.ajax({
+                    type: "POST",
+                    url: "stockProductos/transferir/" + productoId,
+                    data: {
+                        _token: $('meta[name="csrf-token"]').attr("content"),
+                        habitacion_id: habitacionId,
+                        cantidad: cantidad,
+                    },
+                    success: function (data) {
+                        var stockActualizado = parseFloat(data.stock_habitacion || 0);
+
+                        var $opcion = $("#productos option[value='" + productoId + "']");
+                        if ($opcion.length) {
+                            $opcion.attr("data-stock", stockActualizado);
+                            $opcion.data("stock", stockActualizado);
+                            $opcion.text(data.producto + " -> Stock(" + stockActualizado + ")");
+                        }
+
+                        var productoSeleccionadoActual = $("#productos").val();
+                        var $selectProductos = $("#productos");
+                        if ($selectProductos.hasClass("select2-hidden-accessible")) {
+                            $selectProductos.select2("destroy");
+                        }
+                        $selectProductos.select2({
+                            dropdownParent: $selectProductos.parent(),
+                        });
+                        $selectProductos.val(productoSeleccionadoActual).trigger("change");
+
+                        Swal.fire({
+                            icon: "success",
+                            title: "Stock repuesto",
+                            html:
+                                "<strong>Producto:</strong> " + data.producto +
+                                "<br><strong>Habitacion:</strong> " + data.habitacion +
+                                "<br><strong>Almacen general:</strong> " + data.stock_general +
+                                "<br><strong>Stock habitacion:</strong> " + data.stock_habitacion +
+                                "<br><strong>Total:</strong> " + data.stock_total,
+                        });
+
+                        if ($("#productos").val() == productoId) {
+                            actualizarResumenProductoModal(
+                                dataProducto.precioventa,
+                                data.stock_general,
+                                stockActualizado
+                            );
+                        }
+                        $("#cantidadReponerGeneral").val(1);
+                    },
+                    error: function (xhr) {
+                        Swal.fire({
+                            icon: "error",
+                            title: "No se pudo reponer",
+                            text: xhr.responseJSON && xhr.responseJSON.message
+                                ? xhr.responseJSON.message
+                                : "Ocurrio un error al mover el stock.",
+                        });
+                    },
+                });
+            });
+        });
+    }
+
     // Evento para agregar un registro al carrito.
     $("#carritoIcon").click(function (e) {
         e.preventDefault();
 
+        var productoId = $("#productos").val();
+        var stockDisponible = parseInt($("#productos option:selected").attr("data-stock")) || 0;
+        var cantidadSolicitada = parseInt($("#cantidadProducto").val());
+        var cantidadEnCarrito = obtenerCantidadEnCarrito(productoId);
+
+        if (!productoId || stockDisponible <= 0) {
+            Swal.fire({
+                icon: "warning",
+                title: "Sin stock en habitación",
+                text: "Este producto no tiene stock disponible en la habitación.",
+            });
+            return;
+        }
+
+        if (cantidadEnCarrito + cantidadSolicitada > stockDisponible) {
+            Swal.fire({
+                icon: "warning",
+                title: "Stock insuficiente",
+                text: "La cantidad supera el stock disponible en la habitación.",
+            });
+            return;
+        }
+
         producto = {
-            nombre: $("#productos option:selected").text(),
+            id: productoId,
+            nombre: $("#productos option:selected").data("nombre") || $("#productos option:selected").text(),
             precio: parseFloat($("#precioProducto").val()),
-            cantidad: parseInt($("#cantidadProducto").val()),
+            cantidad: cantidadSolicitada,
             subtotal:
                 parseFloat($("#precioProducto").val()) *
-                parseInt($("#cantidadProducto").val()),
+                cantidadSolicitada,
+            stockHabitacion: stockDisponible,
         };
 
         console.log(producto);
@@ -62,25 +260,32 @@ $(document).ready(function () {
                         $("#carrito-body").html("");
                         var producto = "";
 
-                        $.get("catProductos/show", function (data) {
+                        $.get("catProductos/showHabitacion/" + $("#numHabitacion").val(), function (data) {
                             console.log(data);
                             $("#productos").html(``);
+                            if (data.length === 0) {
+                                Swal.fire({
+                                    icon: "warning",
+                                    title: "Sin stock",
+                                    text: "No hay productos disponibles en el almacén de esta habitación.",
+                                });
+                                return;
+                            }
+
                             $.each(data, function (index, item) {
                                 $("#productos").html(
                                     $("#productos").html() +
-                                        `<option value="${item.id}"> ${item.nombre} </option>`
+                                `<option value="${item.id}" data-nombre="${item.nombre}" data-stock="${item.stock_habitacion}"> ${item.nombre} -> Stock(${item.stock_habitacion}) </option>`
                                 );
                             });
-                            $.get(
-                                "catProductos/showId/" + $("#productos").val(),
-                                function (data) {
-                                    $("#precioProducto").val(data.precioventa);
-                                    $("#carrito-body").html("");
 
-                                    $("#cantidadProducto").val(1);
-                                    $("#modalVentaProducto").modal("show");
-                                }
-                            );
+                            var primerProductoId = $("#productos option:first").val();
+                            $("#productos").val(primerProductoId);
+                            refrescarResumenProductoSeleccionado();
+                            $("#carrito-body").html("");
+                            $("#cantidadProducto").val(1);
+                            $("#cantidadReponerGeneral").val(1);
+                            $("#modalVentaProducto").modal("show");
                         });
 
                         $("#carrito").on("click", ".fa-trash", function () {
@@ -108,13 +313,65 @@ $(document).ready(function () {
         });
     });
 
-    $("#productos").change(function () {
-        // Obtener el valor seleccionado
-        var selectedValue = $(this).val();
-        console.log(selectedValue);
-        $.get("catProductos/showId/" + $("#productos").val(), function (data) {
-            $("#precioProducto").val(data.precioventa);
+    $(document).on("change", "#productos", function () {
+        refrescarResumenProductoSeleccionado();
+    });
+
+    $(document).on("click", ".btn-reponer-rapido-producto", function (e) {
+        e.preventDefault();
+        reponerDesdeGeneral($(this).data("producto-id"), $(this).data("producto-nombre") || "el producto");
+    });
+
+    $(document).on("click", "#btnReponerDesdeGeneralLista", function (e) {
+        e.preventDefault();
+
+        var productos = getProductosEnTablaHabitacion();
+        if (!productos.length) {
+            Swal.fire({
+                icon: "warning",
+                title: "Sin productos",
+                text: "No hay productos agregados en esta habitacion para reponer.",
+            });
+            return;
+        }
+
+        var opciones = "";
+        productos.forEach(function (producto) {
+            opciones += '<option value="' + producto.id + '">' + producto.nombre + '</option>';
         });
+
+        Swal.fire({
+            title: "Reponer desde general",
+            html:
+                '<div class="text-start mb-2">Selecciona el producto a reponer:</div>' +
+                '<select id="swalProductoReponer" class="swal2-select">' + opciones + "</select>",
+            showCancelButton: true,
+            confirmButtonText: "Reponer 1",
+            cancelButtonText: "Cancelar",
+            focusConfirm: false,
+            preConfirm: function () {
+                return $("#swalProductoReponer").val();
+            },
+        }).then(function (result) {
+            if (!result.isConfirmed || !result.value) {
+                return;
+            }
+
+            var productoSeleccionado = productos.find(function (item) {
+                return String(item.id) === String(result.value);
+            });
+
+            reponerDesdeGeneral(result.value, productoSeleccionado ? productoSeleccionado.nombre : "el producto");
+        });
+    });
+
+    $("#btnReponerDesdeGeneral").on("click", function (e) {
+        e.preventDefault();
+
+        var productoId = $("#productos").val();
+        var nombreProducto = $("#productos option:selected").data("nombre") || $("#productos option:selected").text();
+        var cantidad = $("#cantidadReponerGeneral").val();
+        reponerDesdeGeneral(productoId, nombreProducto, cantidad);
     });
 });
 
@@ -205,6 +462,7 @@ $(document).ready(function () {
         $("#carrito-body tr").each(function () {
             var fila = $(this);
             var producto = {
+                id: fila.data("id"),
                 nombre: fila.find("td:eq(0)").text(), // Obtiene el contenido de la primera columna (Producto)
                 precio: parseFloat(
                     fila.find("td:eq(1)").text().replace("S/ ", "")
@@ -274,20 +532,20 @@ $(document).ready(function () {
                                             .movimiento_id,
                                     function (data) {
                                         console.log(data);
-                                        $(".listaProductos").html(``);
+                        $(".listaProductos").html(``);
 
-                                        $.each(data, function (index, item) {
-                                            $(".listaProductos").html(
-                                                $(".listaProductos").html() +
-                                                    ` <tr id="${item.id}" >
-                                                    <td>
-                                                <a href="javascript:void(0)" onclick="eliminarProductoAgregado(${
-                                                    item.id
-                                                })">
-                                                    <i class="fa-solid fa-trash " style="color: #0047c2;"></i>
-                                                </a>
-                                                
-                                                    </td>
+                        $.each(data, function (index, item) {
+                        $(".listaProductos").html(
+                            $(".listaProductos").html() +
+                                    ` <tr id="${item.id}" data-producto-id="${item.producto_id || ""}" data-producto-nombre="${item.nombre}">
+                                    <td>
+                                <a href="javascript:void(0)" onclick="eliminarProductoAgregado(${
+                                    item.id
+                                })" title="Eliminar producto">
+                                    <i class="fa-solid fa-trash " style="color: #0047c2;"></i>
+                                </a>
+                                
+                                    </td>
                                                     <td>${item.nombre}</td>
                                                     <td>${item.cantidad}</td>
                                                     <td>${item.precioventa}</td>
@@ -361,3 +619,4 @@ $(document).ready(function () {
         });
     });
 });
+

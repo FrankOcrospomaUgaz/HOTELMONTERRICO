@@ -65,6 +65,9 @@
             @include('Modulos.Productos.Tables.tablaProductoStock')
         </div>
 
+        @include('Modulos.Productos.Modals.Stock.modalDistribucionStock')
+        @include('Modulos.Productos.Modals.Stock.modalRepartoRapidoStock')
+
 
     @section('footer')
         <footer>

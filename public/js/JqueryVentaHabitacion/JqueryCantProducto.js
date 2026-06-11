@@ -24,7 +24,11 @@ $(document).ready(function () {
             $("#nombreProducto").val(data.producto.nombre);
             $("#notaProductoE").val(data.movimiento.comentario);
             $("#cantidadProductoEd").val(data.movimiento.cantidad);
-            var cantidadTotal = data.producto.stock + data.movimiento.cantidad;
+            var stockDisponibleHabitacion = parseFloat(
+                data.stockHabitacionDisponible || 0
+            );
+            var cantidadTotal =
+                stockDisponibleHabitacion + data.movimiento.cantidad;
 
             // $("#cantidadProductoEd").attr("max", cantidadTotal);
             $("#cantidadProductoEd").prop(
@@ -32,7 +36,7 @@ $(document).ready(function () {
                 "La cantidad debe ser menor o igual a: " + cantidadTotal
             );
 
-            $("#stockCantProd").val(data.producto.stock);
+            $("#stockCantProd").val(stockDisponibleHabitacion);
             $("#modalEditCantProducto").modal("show");
         });
     });
