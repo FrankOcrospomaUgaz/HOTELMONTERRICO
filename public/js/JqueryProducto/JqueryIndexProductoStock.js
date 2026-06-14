@@ -46,13 +46,13 @@ $("#filtroProducto").submit(function (e) {
 
 $("#resetFiltroProducto").click(function (e) {
     e.preventDefault();
-    $("#activosProducto").val("todos");
+    $("#activosProducto").val("activos");
     $("#tbProductoStock").dataTable().fnDestroy();
     var table = $("#tbProductoStock").DataTable({
         ajax: {
             url: "stockProductos",
             data: {
-                estado: "",
+                estado: "activos",
             },
         },
         orderCellsTop: true,
@@ -286,10 +286,10 @@ $("#tbProductoStock thead tr")
     .appendTo("#tbProductoStock thead");
 
 var table = $("#tbProductoStock").DataTable({
-    ajax: {
-        url: "stockProductos",
-        data: { estado: "" },
-    },
+        ajax: {
+            url: "stockProductos",
+            data: { estado: "activos" },
+        },
     orderCellsTop: true,
     
     columns: columnsP,

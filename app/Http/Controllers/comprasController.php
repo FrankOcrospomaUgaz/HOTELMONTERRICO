@@ -155,7 +155,12 @@ class comprasController extends Controller
     public function guardarDetalle(Request $request, $id)
     {
 
-        $producto = Producto::find($request->input('productos'));
+        $producto = $this->obtenerProductoActivo((int) $request->input('productos'));
+
+        if (!$producto) {
+            return response()->json(['message' => 'El producto está deshabilitado o no existe.'], 422);
+        }
+
         $detalleMovimiento = Detallemovimiento::create([
             'movimiento_id' => $id,
             'cantidad' => $request->input('cantidadProductoEd'),

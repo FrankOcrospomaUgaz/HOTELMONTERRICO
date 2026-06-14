@@ -215,4 +215,16 @@ class Controller extends BaseController
     {
         return Habitacion::where('estado', 1)->orderBy('numero', 'asc')->get();
     }
+
+    protected function filtrarProductosActivos($productos): array
+    {
+        return array_values(array_filter($productos, function ($producto) {
+            return (int) $producto->estado === 1;
+        }));
+    }
+
+    protected function obtenerProductoActivo(int $id): ?Producto
+    {
+        return Producto::where('id', $id)->where('estado', 1)->first();
+    }
 }

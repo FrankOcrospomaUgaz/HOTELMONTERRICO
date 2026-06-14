@@ -110,7 +110,11 @@ class docAlmacenController extends Controller
         $idMovPadre = $request->input('idMovimientoPadre');
 
         if ($idMovPadre != null) {
-            $producto = Producto::find($request->input('productos'));
+            $producto = $this->obtenerProductoActivo((int) $request->input('productos'));
+
+            if (!$producto) {
+                return response()->json(['message' => 'El producto está deshabilitado o no existe.'], 422);
+            }
             
             $detalleMovimiento = Detallemovimiento::create([
                 'movimiento_id' => $idMovPadre,
@@ -145,7 +149,12 @@ class docAlmacenController extends Controller
                 'comentario' => $request->input('comentario'),
             ]);
 
-            $producto = Producto::find($request->input('productos'));
+            $producto = $this->obtenerProductoActivo((int) $request->input('productos'));
+
+            if (!$producto) {
+                return response()->json(['message' => 'El producto está deshabilitado o no existe.'], 422);
+            }
+
             $detalleMovimiento = Detallemovimiento::create([
                 'movimiento_id' => $movimiento->id,
                 'cantidad' => $request->input('cantidadProductoEd'),

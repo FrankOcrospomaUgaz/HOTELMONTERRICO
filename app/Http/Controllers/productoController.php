@@ -100,23 +100,8 @@ class productoController extends Controller
         $permisosCrear = Permission::where('padreCrud', self::idVistaStock)->get()[0];
         if ($request->ajax()) {
 
-            $estado = $request->input('estado');
-            if ($estado == 'inactivos') {
-                $productos = DB::select('call showProductos');
-
-                $productosFiltrados = array_filter($productos, function ($producto) {
-                    return $producto->estado == 0;
-                });
-            } elseif ($estado == 'activos') {
-                $productos = DB::select('call showProductos');
-                $productosFiltrados = array_filter($productos, function ($producto) {
-                    return $producto->estado > 0;
-                });
-            } else if ($estado == 'todos') {
-                $productosFiltrados = DB::select('call showProductos');
-            } else {
-                $productosFiltrados = DB::select('call showProductos');
-            }
+            $productos = DB::select('call showProductos');
+            $productosFiltrados = $this->filtrarProductosActivos($productos);
             $productosFiltrados = $this->enriquecerProductosConStockHabitacion($productosFiltrados);
 
             return datatables($productosFiltrados)
@@ -162,7 +147,11 @@ class productoController extends Controller
 
     public function distribucionProducto($id)
     {
-        $producto = Producto::findOrFail($id);
+        $producto = $this->obtenerProductoActivo((int) $id);
+
+        if (!$producto) {
+            return response()->json(['message' => 'El producto está deshabilitado o no existe.'], 422);
+        }
         $habitaciones = $this->obtenerHabitacionesActivas()->map(function ($habitacion) use ($producto) {
             $stockHabitacion = $this->obtenerStockHabitacionProducto($producto->id, $habitacion->id);
 
@@ -274,11 +263,23 @@ class productoController extends Controller
 
     public function showId($id)
     {
-        return response()->json(Producto::find($id));
+        $producto = $this->obtenerProductoActivo((int) $id);
+
+        if (!$producto) {
+            return response()->json(['message' => 'El producto está deshabilitado o no existe.'], 404);
+        }
+
+        return response()->json($producto);
     }
 
     public function stockHabitacion($productoId, $numHabitacion)
     {
+        $producto = $this->obtenerProductoActivo((int) $productoId);
+
+        if (!$producto) {
+            return response()->json(['message' => 'El producto está deshabilitado o no existe.'], 404);
+        }
+
         $habitacion = Habitacion::where('numero', $numHabitacion)->first();
         if (!$habitacion) {
             return response()->json(['stockHabitacion' => 0]);
@@ -378,7 +379,11 @@ class productoController extends Controller
 
     public function repartirStockHabitaciones(Request $request, $id)
     {
-        $producto = Producto::findOrFail($id);
+        $producto = $this->obtenerProductoActivo((int) $id);
+
+        if (!$producto) {
+            return response()->json(['message' => 'El producto está deshabilitado o no existe.'], 422);
+        }
 
         $habitacionesIds = $request->input('habitaciones_ids', []);
         if (!is_array($habitacionesIds) || count($habitacionesIds) === 0) {
@@ -505,7 +510,12 @@ class productoController extends Controller
             'cantidad' => 'required|numeric|min:1',
         ]);
 
-        $producto = Producto::findOrFail($id);
+        $producto = $this->obtenerProductoActivo((int) $id);
+
+        if (!$producto) {
+            return response()->json(['message' => 'El producto está deshabilitado o no existe.'], 422);
+        }
+
         $habitacionId = (int) $request->input('habitacion_id');
         $habitacion = Habitacion::find($habitacionId);
 
@@ -553,7 +563,12 @@ class productoController extends Controller
             'cantidad' => 'nullable|numeric|min:1',
         ]);
 
-        $producto = Producto::findOrFail($id);
+        $producto = $this->obtenerProductoActivo((int) $id);
+
+        if (!$producto) {
+            return response()->json(['message' => 'El producto está deshabilitado o no existe.'], 422);
+        }
+
         $habitacionId = (int) $request->input('habitacion_id');
         $habitacion = Habitacion::find($habitacionId);
 

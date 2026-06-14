@@ -55,13 +55,13 @@ class detallMovimientoController extends Controller
                     $productoId = $detalleMov['id'] ?? null;
                     if (!$productoId) {
                         $nombreSinEspacios = preg_replace('/\s+/', '', $detalleMov['nombre']);
-                        $producto = Producto::whereRaw("REPLACE(nombre, ' ', '') REGEXP '^" . $nombreSinEspacios . "$'")->first();
+                        $producto = Producto::where('estado', 1)->whereRaw("REPLACE(nombre, ' ', '') REGEXP '^" . $nombreSinEspacios . "$'")->first();
                     } else {
-                        $producto = Producto::find($productoId);
+                        $producto = $this->obtenerProductoActivo((int) $productoId);
                     }
 
                     if (!$producto) {
-                        throw new \RuntimeException('No se encontró el producto ' . $detalleMov['nombre']);
+                        throw new \RuntimeException('El producto ' . $detalleMov['nombre'] . ' está deshabilitado o no existe.');
                     }
 
                     $cantidad = (float) $detalleMov['cantidad'];
@@ -83,14 +83,14 @@ class detallMovimientoController extends Controller
                 foreach ($tableData as $detalleMov) {
                     $productoId = $detalleMov['id'] ?? null;
                     if ($productoId) {
-                        $producto = Producto::find($productoId);
+                        $producto = $this->obtenerProductoActivo((int) $productoId);
                     } else {
                         $nombreSinEspacios = preg_replace('/\s+/', '', $detalleMov['nombre']);
-                        $producto = Producto::whereRaw("REPLACE(nombre, ' ', '') REGEXP '^" . $nombreSinEspacios . "$'")->first();
+                        $producto = Producto::where('estado', 1)->whereRaw("REPLACE(nombre, ' ', '') REGEXP '^" . $nombreSinEspacios . "$'")->first();
                     }
 
                     if (!$producto) {
-                        throw new \RuntimeException('No se encontró el producto ' . $detalleMov['nombre']);
+                        throw new \RuntimeException('El producto ' . $detalleMov['nombre'] . ' está deshabilitado o no existe.');
                     }
 
                     $cantidad = (float) $detalleMov['cantidad'];

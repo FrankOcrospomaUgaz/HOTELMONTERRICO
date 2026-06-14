@@ -1277,6 +1277,7 @@ class PDFController extends Controller
         $dateTime = Carbon::now()->format('Y-m-d H:i:s');
  
         $movProductos = DB::select('CALL showProductos');
+        $movProductos = $this->filtrarProductosActivos($movProductos);
         $movProductos = $this->enriquecerProductosConStockHabitacion($movProductos);
 
         $Responsable = User::find(Auth::user()->id);

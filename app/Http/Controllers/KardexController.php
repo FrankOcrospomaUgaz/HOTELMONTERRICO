@@ -37,7 +37,7 @@ class KardexController extends Controller
     public function export($idProducto, $fechaI, $fechaT)
     {
         $exportData = [];
-        $productos = Producto::all();
+        $productos = Producto::where('estado', 1)->get();
         if ($idProducto == 'todos') {
 
             foreach ($productos as $prod) {
@@ -149,6 +149,12 @@ class KardexController extends Controller
 
             }
         } else {
+            $productoActivo = $this->obtenerProductoActivo((int) $idProducto);
+
+            if (!$productoActivo) {
+                abort(404, 'El producto está deshabilitado o no existe.');
+            }
+
             // -----------------------------------------------------------------------------------------------------
 
             $query = "CALL movCalculoPrecioAntesKardex($idProducto, '$fechaI')";
