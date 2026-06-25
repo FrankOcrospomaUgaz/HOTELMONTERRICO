@@ -213,7 +213,13 @@ class Controller extends BaseController
 
     protected function obtenerHabitacionesActivas()
     {
-        return Habitacion::where('estado', 1)->orderBy('numero', 'asc')->get();
+        return Habitacion::where('estado', 1)
+            ->where(function ($query) {
+                $query->whereNull('situacion')
+                    ->orWhere('situacion', '!=', 'Mantenimiento');
+            })
+            ->orderBy('numero', 'asc')
+            ->get();
     }
 
     protected function filtrarProductosActivos($productos): array
@@ -226,5 +232,48 @@ class Controller extends BaseController
     protected function obtenerProductoActivo(int $id): ?Producto
     {
         return Producto::where('id', $id)->where('estado', 1)->first();
+    }
+
+    protected function obtenerOrigenDetalle(?string $comentario): string
+    {
+        if (is_string($comentario) && str_starts_with($comentario, '__origen:general__')) {
+            return 'general';
+        }
+
+        if (is_string($comentario) && str_starts_with($comentario, '__origen:habitacion__')) {
+            return 'habitacion';
+        }
+
+        return 'habitacion';
+    }
+
+    protected function limpiarComentarioDetalle(?string $comentario): string
+    {
+        if (!is_string($comentario) || trim($comentario) === '') {
+            return '';
+        }
+
+        return trim(
+            str_replace(
+                ['__origen:general__', '__origen:habitacion__'],
+                '',
+                $comentario
+            )
+        );
+    }
+
+    protected function construirComentarioDetalle(string $origen, ?string $comentarioVisible = ''): string
+    {
+        $prefijo = $origen === 'general'
+            ? '__origen:general__'
+            : '__origen:habitacion__';
+
+        $comentarioVisible = trim((string) $comentarioVisible);
+
+        if ($comentarioVisible === '' || $comentarioVisible === '-') {
+            return $prefijo;
+        }
+
+        return $prefijo . ' ' . $comentarioVisible;
     }
 }
