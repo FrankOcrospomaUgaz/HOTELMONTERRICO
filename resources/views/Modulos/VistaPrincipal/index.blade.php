@@ -47,6 +47,54 @@
 @stop
 
 @include('Modulos.VistaPrincipal.Modal.modalCambiarSituacion')
+<div class="modal fade" id="modalVentaRapida" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-venta-rapida">
+        <div class="modal-content">
+            <div class="modal-header py-2 px-3">
+                <h5 class="modal-title"><strong id="tituloModalVentaRapida">Venta Rapida</strong></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body p-0">
+                <iframe id="iframeVentaRapida" title="Venta Rapida" class="iframe-venta-rapida" src="about:blank"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modalReposicionRapida" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header py-2 px-3">
+                <h5 class="modal-title"><strong id="tituloModalReposicion">Reposicion rapida</strong></h5>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="btn btn-sm btn-primary" id="btnReponerTodos">
+                        Reponer todos
+                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Stock habitacion</th>
+                                <th>Stock general</th>
+                                <th style="width: 130px;">Cantidad</th>
+                                <th style="width: 140px;">Accion</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaReposicionRapida">
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">Cargando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 @stop
 
@@ -68,6 +116,28 @@
 <link rel="stylesheet" href="{{ asset('css/footer.css') }}">
 <link rel="stylesheet" href="{{ asset('css/habitaciones.css') }}">
 <link rel="stylesheet" href="{{ asset('css/tooltips.css') }}">
+<style>
+    .modal-venta-rapida {
+        max-width: min(1500px, 96vw);
+    }
+
+    #modalVentaRapida .modal-content {
+        overflow: hidden;
+        border-radius: 18px;
+    }
+
+    #modalVentaRapida .modal-body {
+        overflow: hidden;
+    }
+
+    .iframe-venta-rapida {
+        width: 100%;
+        height: 84vh;
+        border: 0;
+        display: block;
+        background: #f4f6f9;
+    }
+</style>
 
 
 @stop

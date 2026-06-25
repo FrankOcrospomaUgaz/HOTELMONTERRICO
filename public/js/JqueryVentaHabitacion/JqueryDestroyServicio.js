@@ -10,8 +10,7 @@ function eliminarProductoAgregado(id) {
             $.ajax({
                 url: "detalleMovimiento/eliminar/" + id,
 
-                success: function (data) {
-                    $("#" + id).remove();
+                success: function () {
                     Swal.fire({
                         position: "center",
                         icon: "success",
@@ -19,15 +18,9 @@ function eliminarProductoAgregado(id) {
                         showConfirmButton: false,
                         timer: 1500,
                     });
-                    $.get(
-                        "detalleMovimiento/cantTotalMovCompra/" +
-                            $("#idMovimiento").val(),
-                        function (data) {
-                            if (data.total != null) {
-                                $("#totalMasIgv").text("S/" + data.total);
-                            }
-                        }
-                    );
+                    if (typeof refrescarVentaRapidaContexto === "function") {
+                        refrescarVentaRapidaContexto();
+                    }
                 },
             });
         }

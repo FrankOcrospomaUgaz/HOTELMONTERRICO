@@ -1,168 +1,528 @@
-.Ventas ul {
-    list-style-type: none;
-    padding: 0;
+.venta-rapida {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    color: #1f2937;
 }
 
-.Ventas li {
+.venta-rapida__header {
+    display: flex;
+    gap: 14px;
+    align-items: stretch;
+}
+
+.venta-rapida__summary {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    padding: 18px;
+    border: 1px solid #d8e3ea;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #f7fbff 0%, #edf6f1 100%);
+}
+
+.venta-rapida__item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.venta-rapida__label {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.venta-rapida__value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.venta-rapida__actions {
+    width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.venta-rapida__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 44px;
+    border-radius: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.venta-rapida__btn-primary {
+    background: #165dff;
+    color: #fff;
+}
+
+.venta-rapida__btn-danger {
+    background: #d62828;
+    color: #fff;
+}
+
+.venta-rapida__checkin,
+.venta-rapida__panel {
+    border: 1px solid #d8e3ea;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+}
+
+.venta-rapida__checkin {
+    padding: 18px;
+}
+
+.venta-rapida__checkin-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 220px;
+    gap: 14px;
+    align-items: end;
+}
+
+.venta-rapida__checkin-action {
+    display: flex;
+}
+
+.venta-rapida__btn-block {
+    width: 100%;
+    min-height: 44px;
+    border-radius: 12px;
+    font-weight: 700;
+}
+
+.venta-rapida__workspace {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.venta-rapida__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+}
+
+.venta-rapida__panel {
+    padding: 18px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.venta-rapida__panel-side {
+    display: flex;
+    flex-direction: column;
+}
+
+.venta-rapida__section-head {
     display: flex;
     justify-content: space-between;
+    align-items: start;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.venta-rapida__title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}
+
+.venta-rapida__subtitle {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: #64748b;
+}
+
+.venta-rapida__quick-form {
+    display: grid;
+    grid-template-columns: minmax(0, 3.35fr) minmax(0, 2.55fr) minmax(92px, 0.48fr) minmax(108px, 0.56fr) minmax(170px, 0.92fr);
+    gap: 10px;
+    align-items: end;
+    margin-bottom: 12px;
+}
+
+.venta-rapida__quick-form-side {
+    grid-template-columns: minmax(0, 1.4fr) minmax(96px, 0.5fr) minmax(110px, 0.6fr);
+}
+
+.venta-rapida__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.venta-rapida__field-producto,
+.venta-rapida__field-origen {
+    width: 100%;
+}
+
+.venta-rapida__field label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #334155;
+    margin: 0;
+}
+
+.venta-rapida__field-inline {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 46px;
+    gap: 8px;
+}
+
+.venta-rapida__mini-btn {
+    border-radius: 12px;
+    min-height: 42px;
+}
+
+.venta-rapida__field-sm {
+    min-width: 0;
+}
+
+.venta-rapida__field-action {
+    display: flex;
+}
+
+.venta-rapida__segmentado {
+    display: flex;
     align-items: center;
-    border-bottom: 1px solid #e9e9e9;
-    padding: 10px 0;
+    gap: 6px;
+    padding: 4px;
+    min-height: 48px;
+    border: 1px solid #cbd5e1;
+    border-radius: 14px;
+    background:
+        linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        0 6px 18px rgba(37, 99, 235, 0.08);
+    overflow: hidden;
 }
 
-.Ventas span {
-    margin-right: 15px;
-    margin-left: 17px;
+.venta-rapida__segmentado input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
 }
 
-.Ventas li:last-child {
-    border-bottom: none;
-
+.venta-rapida__segmentado label {
+    margin: 0;
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 38px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+    color: #355070;
+    cursor: pointer;
+    transition: transform 0.16s ease, background 0.16s ease, color 0.16s ease,
+        box-shadow 0.16s ease;
+    text-align: center;
 }
 
-.Ventas .total {
-    font-weight: bold;
+.venta-rapida__segmentado label i {
+    flex: 0 0 auto;
+    font-size: 12px;
 }
 
-.Ventas .totalPagar {
-    font-size: 20px;
-    font-weight: bold;
+.venta-rapida__segmentado input[type="radio"]:checked + label {
+    color: #fff;
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+    box-shadow: 0 10px 18px rgba(37, 99, 235, 0.24);
 }
 
-.Ventas .agregar:hover {
-    color: rgb(141, 219, 23) !important;
-
+.venta-rapida__segmentado input[type="radio"]:not(:checked) + label:hover {
+    background: rgba(37, 99, 235, 0.08);
+    color: #1d4ed8;
 }
 
-#registroNuevo .agregar:hover {
-    color: rgb(141, 219, 23) !important;
-
+.venta-rapida__quick-form .select2-container,
+.venta-rapida__quick-form .form-control {
+    width: 100% !important;
+    min-width: 0;
 }
 
-.Ventas i:hover {
-    color: rgb(0, 0, 0) !important;
-
+.venta-rapida__field-producto .select2-container,
+.venta-rapida__field-producto .select2,
+.venta-rapida__field-origen .venta-rapida__segmentado {
+    width: 100% !important;
 }
 
-
-.Ventas i {
-    margin-left: 10px;
-    margin-right: 4px;
+.venta-rapida__quick-form input[type="number"],
+.venta-rapida__quick-form input[type="text"],
+.venta-rapida__quick-form select {
+    min-height: 48px;
 }
 
-
-#modalCambiarHabitacion .modal-lg {
-    max-width:500px;
-
+.venta-rapida__quick-form .btn {
+    min-height: 48px;
 }
 
+.venta-rapida__field-full {
+    grid-column: 1 / -1;
+}
 
-#modalVentaProducto .modal-lg,
-#modalVentaServicio .modal-lg {
-    max-width: 500px;
+.venta-rapida__stock-bar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
 
+.venta-rapida__stock-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.venta-rapida__stock-pill strong {
+    font-size: 15px;
+}
+
+.venta-rapida__stock-pill-wide {
+    background: #f8fafc;
+    color: #475569;
 }
 
 .Ventas .formatoTabla {
-    height: 240px;
-    max-height: 100%;
-    overflow-y: auto;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    padding-top: 0px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-  
-  .Ventas .formatoTabla::-webkit-scrollbar {
+    overflow: auto;
+    overflow-x: hidden;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    background: #fff;
+}
+
+.venta-rapida__tabla {
+    height: auto;
+    max-height: none;
+}
+
+.venta-rapida__tabla-side {
+    height: 260px;
+}
+
+.Ventas .formatoTabla table {
+    margin-bottom: 0;
+}
+
+.Ventas .formatoTabla::-webkit-scrollbar {
     width: 8px;
-  }
-  
-  .Ventas .formatoTabla::-webkit-scrollbar-thumb {
-    background-color: #0042cf;
-  }
-  
-  .Ventas .formatoTabla:hover::-webkit-scrollbar-thumb {
-    background-color: #0033a1;
-  }
-  
-  .Ventas .formatoTabla-toolbar {
-    display: none;
-  }
-  
-  .Ventas .formatoTabla:hover .formatoTabla-toolbar {
-    display: block;
-  }
- 
-  .Ventas .formatoTabla thead th {
+    height: 8px;
+}
+
+.Ventas .formatoTabla::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 999px;
+}
+
+.Ventas .formatoTabla thead th {
     position: sticky;
     top: 0;
-    background-color: #e1efe9;
-    color: black;
-    padding: 6px;
+    z-index: 1;
+    background: #eff6f2;
+    color: #0f172a;
+    border-bottom: 1px solid #d8e3ea;
+    padding: 10px 8px;
     text-align: center;
-    border-bottom: 1px solid #ddd;
-  }
-  
-  .Ventas h4 {
-    font-family: "Arial", sans-serif;
-    font-size: 24px;
-    font-weight: bold;
-    color: #333333;
-    text-transform: uppercase;
-    text-decoration: underline;
-    text-align: left;
-    margin-top: 10px;
-    margin-bottom: 20px;
-  }
- 
-  
-
-  
-
+    font-size: 13px;
+}
 
 .Ventas th,
 .Ventas td {
-    padding: 0.3rem;
-}
-
-
-.Ventas th,
-.Ventas td {
-    border: 1px solid #ffffff;
-   
-}
-
-.Ventas thead th,
-.Ventas thead td {
-    border-bottom-width: 2px;
+    padding: 0.45rem 0.4rem;
+    border: 0;
+    text-align: center;
+    vertical-align: middle;
 }
 
 .Ventas tbody tr:nth-of-type(odd) {
-    background-color: rgba(38, 186, 255, 0.05);
+    background: rgba(59, 130, 246, 0.04);
 }
 
 .Ventas tbody tr:hover {
-    background-color: rgb(99, 196, 123);
-    color: white;
+    background: #dcfce7;
 }
 
-.btnAgregarDisminuir{
-    background: #03a9f4;border-radius: 15px;color: white;font-size: 12px;
-background: #03a9f4;border-radius: 15px;color: white;font-size: 12px;
-}
-.btnAgregarDisminuir:hover{
-    background: #03a8f4a4;
+.venta-rapida__row-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex-wrap: nowrap;
 }
 
-.ventaSelect .select2-container--default .select2-selection--single {
-    padding: 5px;
-    height: 35px;
-    max-width: 100%;
+.venta-rapida__icon-btn {
+    width: 30px;
+    height: 30px;
+    border: 0;
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    box-shadow: 0 8px 14px rgba(15, 23, 42, 0.12);
+    transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+}
+
+.venta-rapida__icon-btn:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.03);
+}
+
+.venta-rapida__icon-btn-plus {
+    background: linear-gradient(135deg, #0f9f6e 0%, #14b86a 100%);
+}
+
+.venta-rapida__icon-btn-minus {
+    background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+}
+
+.venta-rapida__icon-btn-trash {
+    background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+}
+
+.Ventas .totalPagar {
+    font-size: 28px;
+    font-weight: 800;
+}
+
+.venta-rapida__footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 18px;
+    border: 1px solid #d8e3ea;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+}
+
+.venta-rapida__total {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.venta-rapida__total span {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.venta-rapida__footer-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.ventaSelect .select2-container--default .select2-selection--single,
+.select2-container--default .select2-selection--single {
+    min-height: 42px;
+    padding: 6px 10px;
+    border-radius: 12px;
+    border-color: #cbd5e1;
+    width: 100%;
     box-sizing: border-box;
 }
 
-.ventaSelect .select2-container {
-    font-size: 13px;
-    max-width: 100%;
+.select2-container .select2-selection__rendered {
+    line-height: 28px !important;
+}
+
+.select2-container .select2-selection__arrow {
+    height: 40px !important;
+}
+
+@media (max-width: 1200px) {
+    .venta-rapida__summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .venta-rapida__quick-form {
+        grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.75fr) minmax(100px, 0.56fr) minmax(112px, 0.62fr);
+    }
+
+    .venta-rapida__field-action {
+        grid-column: 1 / -1;
+    }
+
+    .venta-rapida__field-full {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 900px) {
+    .venta-rapida__quick-form,
+    .venta-rapida__quick-form-side {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .venta-rapida__field-action,
+    .venta-rapida__field-full {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 768px) {
+    .venta-rapida__header,
+    .venta-rapida__checkin-grid,
+    .venta-rapida__footer {
+        flex-direction: column;
+        display: flex;
+    }
+
+    .venta-rapida__summary {
+        grid-template-columns: 1fr;
+    }
+
+    .venta-rapida__actions {
+        width: 100%;
+    }
+
+    .venta-rapida__quick-form,
+    .venta-rapida__quick-form-side {
+        grid-template-columns: 1fr;
+    }
+
+    .venta-rapida__panel,
+    .venta-rapida__checkin,
+    .venta-rapida__footer {
+        padding: 14px;
+    }
+
+    .venta-rapida__tabla {
+        height: auto;
+        max-height: none;
+    }
+
+    .venta-rapida__tabla-side {
+        height: 320px;
+    }
 }
