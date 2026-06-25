@@ -13,9 +13,10 @@ h1 {
 .habitacion {
     flex-basis: calc(16.4% - 30px);
     margin: auto;
-cursor: pointer;
+    cursor: default;
     text-align: center;
-    height: auto;
+    min-height: 246px;
+    height: 246px;
     background-color: rgb(6 225 0);
     border-radius: 25px;
     border: 1px solid #000000;
@@ -35,9 +36,13 @@ cursor: pointer;
 }
 
 .centro {
+    display: flex;
+    flex-direction: column;
     justify-content: space-between;
     align-items: center;
     margin: auto;
+    width: 100%;
+    gap: 6px;
 }
 
 .numero {
@@ -65,7 +70,7 @@ cursor: pointer;
 }
 
 .Inferior {
-    margin-top: 10px;
+    margin-top: 4px;
     text-align: center;
     color: white;
 }
@@ -73,6 +78,145 @@ cursor: pointer;
 .estado {
     font-size: 12px;
     font-weight: bold;
+    line-height: 1;
+    margin-bottom: 2px;
+}
+
+.acciones-habitacion {
+    display: flex;
+    justify-content: center;
+    flex-wrap: nowrap;
+    gap: 8px;
+    margin-top: 8px;
+    width: 100%;
+}
+
+.accion-habitacion {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: 999px;
+    padding: 0;
+    font-size: 14px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18),
+        0 3px 8px rgba(0, 0, 0, 0.22);
+    transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.accion-habitacion::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.85);
+    color: #fff;
+    padding: 5px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    z-index: 5;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.accion-habitacion:hover::before {
+    opacity: 1;
+    visibility: visible;
+}
+
+.accion-habitacion:hover {
+    opacity: 0.98;
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24),
+        0 6px 14px rgba(0, 0, 0, 0.28);
+}
+
+.accion-principal {
+    background: linear-gradient(135deg, #0b63ff 0%, #003fcb 100%);
+}
+
+.accion-danger {
+    background: linear-gradient(135deg, #ff4d4f 0%, #b10012 100%);
+}
+
+.accion-warning {
+    background: linear-gradient(135deg, #ffcf33 0%, #ff9200 100%);
+    color: #1b1b1b;
+}
+
+.accion-success {
+    background: linear-gradient(135deg, #1fcf53 0%, #0a8f08 100%);
+}
+
+.accion-secondary {
+    background: linear-gradient(135deg, #46b8ff 0%, #0d74d1 100%);
+}
+
+.accion-info {
+    background: linear-gradient(135deg, #a855f7 0%, #6d28d9 100%);
+}
+
+.accion-stock {
+    background: linear-gradient(135deg, #8b95a7 0%, #586274 100%);
+}
+
+.accion-habitacion i {
+    filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.18));
+}
+
+.habitacion-ocupada {
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+
+.habitacion-ocupada .centro {
+    gap: 3px;
+}
+
+.habitacion-ocupada .row {
+    line-height: 1;
+}
+
+.habitacion-ocupada .numero {
+    line-height: 1;
+    margin: 0;
+}
+
+.habitacion-ocupada .temporizador {
+    padding: 4px 7px;
+}
+
+.habitacion-ocupada .temporizador-text {
+    margin: 0;
+    line-height: 1.05;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.habitacion-ocupada .temporizador-text b {
+    font-size: 11px;
+}
+
+.habitacion-ocupada .Inferior {
+    margin-top: 6px;
+}
+
+.habitacion-ocupada .estado {
+    line-height: 1;
+}
+
+.habitacion-ocupada .acciones-habitacion {
+    margin-top: 8px;
 }
 
 #modalCambiarSituacion .modal-lg {
@@ -114,6 +258,24 @@ cursor: pointer;
     /* Oculta la barra de desplazamiento vertical */
     margin: 10px;
     width: 100%;
+}
+
+@media (max-width: 1200px) {
+    .habitacion {
+        flex-basis: calc(25% - 30px);
+    }
+}
+
+@media (max-width: 768px) {
+    .habitacion {
+        flex-basis: calc(50% - 20px);
+    }
+}
+
+@media (max-width: 480px) {
+    .habitacion {
+        flex-basis: 100%;
+    }
 }
 
 

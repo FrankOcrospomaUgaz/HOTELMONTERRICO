@@ -98,10 +98,12 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('catProductos/show', 'App\Http\Controllers\productoController@show');
     Route::get('catProductos/showId/{id}', 'App\Http\Controllers\productoController@showId')->name('catProductos.showId');;
     Route::get('catProductos/showHabitacion/{numHabitacion}', 'App\Http\Controllers\productoController@showHabitacion')->name('catProductos.showHabitacion');
+    Route::get('catProductos/showSinStockHabitacion/{numHabitacion}', 'App\Http\Controllers\productoController@showSinStockHabitacion')->name('catProductos.showSinStockHabitacion');
     Route::get('catProductos/stockHabitacion/{productoId}/{numHabitacion}', 'App\Http\Controllers\productoController@stockHabitacion')->name('catProductos.stockHabitacion');
     Route::post('stockProductos/repartir/{id}', 'App\Http\Controllers\productoController@repartirStockHabitaciones')->name('stockProductos.repartir');
     Route::get('stockProductos/distribucion/{id}', 'App\Http\Controllers\productoController@distribucionProducto')->name('stockProductos.distribucion');
     Route::post('stockProductos/transferir/{id}', 'App\Http\Controllers\productoController@transferirStockHabitacion')->name('stockProductos.transferir');
+    Route::post('stockProductos/transferir-masivo', 'App\Http\Controllers\productoController@transferirStockHabitacionMasivo')->name('stockProductos.transferirMasivo');
     Route::post('stockProductos/retirar/{id}', 'App\Http\Controllers\productoController@retirarStockHabitacion')->name('stockProductos.retirar');
 
     Route::resource('vistaPrincipal', 'App\Http\Controllers\vistaPrincipalController');
@@ -145,6 +147,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::put('ventaHabitacion/editar', 'App\Http\Controllers\ventaHabitacionController@update');
 
     Route::get('ventaHabitacion/show', 'App\Http\Controllers\ventaHabitacionController@show');
+    Route::get('ventaHabitacion/contexto/{num}', 'App\Http\Controllers\ventaHabitacionController@contexto');
     Route::get('showProveedores', 'App\Http\Controllers\ventaHabitacionController@showProveedores');
 
     Route::resource('detalleHabitacion', 'App\Http\Controllers\detalleHabitacionController');

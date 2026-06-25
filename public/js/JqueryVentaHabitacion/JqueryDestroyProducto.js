@@ -1,4 +1,9 @@
-function eliminarProductoAgregado(id) {
+function eliminarProductoAgregado(id, options) {
+    const config =
+        typeof options === "function"
+            ? { onSuccess: options }
+            : options || {};
+
     Swal.fire({
         title: "Quieres Eliminarlo de la lista?",
         showDenyButton: true,
@@ -11,7 +16,6 @@ function eliminarProductoAgregado(id) {
                 url: "detalleMovimiento/eliminar/" + id,
 
                 success: function () {
-                    $("#" + id).remove();
                     Swal.fire({
                         position: "center",
                         icon: "success",
@@ -19,19 +23,15 @@ function eliminarProductoAgregado(id) {
                         showConfirmButton: false,
                         timer: 1500,
                     });
-                    // $.get("detalleMovimiento/show/" +$("#idMovimiento").val(), function (data) {
-                    //     $("#totalMasIgv").text('S/'+data.total
-                    //     );
-                    // });
-                    $.get(
-                        "detalleMovimiento/show/" +
-                            $("#idMovimiento").val(),
-                        function (data) {
-                            if (data.total != null) {
-                                $("#totalMasIgv").text("S/" + data.total);
-                            }
-                        }
-                    );
+                    if (typeof config.onSuccess === "function") {
+                        config.onSuccess();
+                    }
+                    if (
+                        !config.skipAutoRefresh &&
+                        typeof refrescarVentaRapidaContexto === "function"
+                    ) {
+                        refrescarVentaRapidaContexto();
+                    }
                 },
             });
         }
