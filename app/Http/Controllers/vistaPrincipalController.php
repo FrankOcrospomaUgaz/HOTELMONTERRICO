@@ -68,7 +68,18 @@ class vistaPrincipalController extends Controller
      */
     public function show()
     {
-        return response()->json(DB::select('call shoHabitacionesYHora'));
+        $habitaciones = collect(DB::select('call shoHabitacionesYHora'));
+        $habitacionesConStockCero = $this->obtenerHabitacionesConStockCero();
+
+        $habitaciones = $habitaciones->map(function ($habitacion) use ($habitacionesConStockCero) {
+            $cantidad = $habitacionesConStockCero[$habitacion->numero] ?? 0;
+            $habitacion->tiene_stock_cero = $cantidad > 0;
+            $habitacion->cantidad_stock_cero = $cantidad;
+
+            return $habitacion;
+        });
+
+        return response()->json($habitaciones->values());
     }
 
     public function sumarHorasHab($num, $cant, $coment, $modoHoraAdicional)
@@ -158,5 +169,28 @@ class vistaPrincipalController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+    private function obtenerHabitacionesConStockCero(): array
+    {
+        $subquery = DB::table('stock_habitacions')
+            ->select('habitacion_id', 'producto_id', DB::raw('SUM(cantidad) as cantidad'))
+            ->groupBy('habitacion_id', 'producto_id');
+
+        return DB::table('habitacions as h')
+            ->crossJoin('productos as p')
+            ->leftJoinSub($subquery, 'sh', function ($join) {
+                $join->on('sh.habitacion_id', '=', 'h.id')
+                    ->on('sh.producto_id', '=', 'p.id');
+            })
+            ->where('h.estado', 1)
+            ->where('p.estado', 1)
+            ->whereRaw('COALESCE(sh.cantidad, 0) <= 0')
+            ->groupBy('h.numero')
+            ->pluck(DB::raw('COUNT(*)'), 'h.numero')
+            ->map(function ($cantidad) {
+                return (int) $cantidad;
+            })
+            ->toArray();
     }
 }

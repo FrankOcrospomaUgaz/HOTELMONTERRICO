@@ -68,9 +68,9 @@
     "uglify-js": "3.4.7"
   },
   "scripts": {
-    "build": "npm install && npm run build-all-variants",
-    "build-all-variants": "grunt custom:slim --filename=jquery.slim.js && grunt custom",
-    "start": "grunt watch",
+    "build": "node init && npm install && npm run build-all-variants",
+    "build-all-variants": "node init && grunt custom:slim --filename=jquery.slim.js && grunt custom",
+    "start": "node init && grunt watch",
     "test:browserless": "grunt && npm run test:node_smoke_tests && grunt test:slow",
     "test:browser": "grunt && grunt karma:main",
     "test:amd": "grunt && grunt karma:amd",

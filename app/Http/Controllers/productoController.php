@@ -145,6 +145,17 @@ class productoController extends Controller
         return response()->json($productos);
     }
 
+    public function showSinStockHabitacion($numHabitacion)
+    {
+        $productos = collect($this->showHabitacion($numHabitacion)->getData());
+
+        return response()->json(
+            $productos->filter(function ($producto) {
+                return (float) ($producto->stock_habitacion ?? 0) <= 0;
+            })->values()
+        );
+    }
+
     public function distribucionProducto($id)
     {
         $producto = $this->obtenerProductoActivo((int) $id);
@@ -614,5 +625,96 @@ class productoController extends Controller
         });
 
         return response()->json($resultado);
+    }
+
+    public function transferirStockHabitacionMasivo(Request $request)
+    {
+        $request->validate([
+            'habitacion_id' => 'required|integer',
+            'items' => 'required|array|min:1',
+            'items.*.producto_id' => 'required|integer',
+            'items.*.cantidad' => 'required|numeric|min:1',
+        ]);
+
+        $habitacionId = (int) $request->input('habitacion_id');
+        $habitacion = Habitacion::find($habitacionId);
+
+        if (!$habitacion) {
+            $habitacion = Habitacion::where('numero', $habitacionId)->first();
+        }
+
+        if (!$habitacion) {
+            return response()->json([
+                'message' => 'La habitacion indicada no existe.',
+            ], 422);
+        }
+
+        $items = collect($request->input('items', []))
+            ->map(function ($item) {
+                return [
+                    'producto_id' => (int) ($item['producto_id'] ?? 0),
+                    'cantidad' => (float) ($item['cantidad'] ?? 0),
+                ];
+            })
+            ->filter(function ($item) {
+                return $item['producto_id'] > 0 && $item['cantidad'] > 0;
+            })
+            ->groupBy('producto_id')
+            ->map(function ($grupo, $productoId) {
+                return [
+                    'producto_id' => (int) $productoId,
+                    'cantidad' => (float) $grupo->sum('cantidad'),
+                ];
+            })
+            ->values();
+
+        if ($items->isEmpty()) {
+            return response()->json([
+                'message' => 'No hay productos validos para reponer.',
+            ], 422);
+        }
+
+        try {
+            $resultado = DB::transaction(function () use ($items, $habitacion) {
+                $productosRepuestos = [];
+
+                foreach ($items as $item) {
+                    $producto = $this->obtenerProductoActivo((int) $item['producto_id']);
+
+                    if (!$producto) {
+                        throw new \RuntimeException('Uno de los productos ya no existe o esta deshabilitado.');
+                    }
+
+                    if ((float) $producto->stock < (float) $item['cantidad']) {
+                        throw new \RuntimeException('No existe suficiente stock en el almacen general para ' . $producto->nombre . '.');
+                    }
+
+                    $producto->stock = (float) $producto->stock - (float) $item['cantidad'];
+                    $producto->save();
+
+                    $this->incrementarStockHabitacion($producto->id, $habitacion->id, (float) $item['cantidad']);
+
+                    $productosRepuestos[] = [
+                        'producto_id' => $producto->id,
+                        'producto' => $producto->nombre,
+                        'cantidad' => (float) $item['cantidad'],
+                        'stock_general' => (float) $producto->stock,
+                        'stock_habitacion' => $this->obtenerStockHabitacionProducto($producto->id, $habitacion->id),
+                    ];
+                }
+
+                return [
+                    'habitacion' => $habitacion->numero,
+                    'productos' => $productosRepuestos,
+                    'total_productos' => count($productosRepuestos),
+                ];
+            });
+
+            return response()->json($resultado);
+        } catch (\RuntimeException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 422);
+        }
     }
 }
