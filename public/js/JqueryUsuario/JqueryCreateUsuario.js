@@ -1,13 +1,13 @@
 $(document).ready(function () {
-    $("#btonNuevo").click(function (e) {
+    $("#btonNuevo").click(function () {
         $("#registroUsuario")[0].reset();
-        $(".error-message").attr("class", "error-message ajuste d-none"); //Desabilita Mensaje error
+        $(".error-message").attr("class", "error-message ajuste d-none");
         $(".CajaRUC").addClass("d-none");
         $(".cajaUsuario").addClass("d-none");
         $(".CajaDNI").removeClass("d-none");
         $("#razonsocial").val("");
         $("#direccion").val("");
-        // LLENAR TIPOS DE USUARIO
+
         $.get("usuarios/create", function (data) {
             $("#tipoUsuario").html("");
             $.each(data.roles, function (index, item) {
@@ -49,6 +49,7 @@ $(document).ready(function () {
                     );
                 }
             });
+
             $("#Usuario").change(function () {
                 if ($("#Usuario").is(":checked")) {
                     $(".cajaUsuario").removeClass("d-none");
@@ -56,6 +57,7 @@ $(document).ready(function () {
                     $(".cajaUsuario").addClass("d-none");
                 }
             });
+
             $("#modalNuevoUsuario").modal("show");
         });
     });
@@ -64,7 +66,7 @@ $(document).ready(function () {
         if ($("#selectDNI-RUC").val() == "DNI") {
             $.get("usuarios/buscarDNI/" + $("#dni").val(), function (data) {
                 if (data.mensaje) {
-                    $(".error-message").removeClass("d-none"); //HaBilitar mensaje error
+                    $(".error-message").removeClass("d-none");
                     $("#nombre").val("");
                     $("#apellPaterno").val("");
                     $("#apellMaterno").val("");
@@ -84,7 +86,7 @@ $(document).ready(function () {
         } else {
             $.get("usuarios/buscarRUC/" + $("#dni").val(), function (data) {
                 if (data.mensaje) {
-                    $(".error-message").removeClass("d-none"); //HaBilitar mensaje error
+                    $(".error-message").removeClass("d-none");
                     $("#razonsocial").val("");
                     $("#direccion").val("");
                     var element = $("[name=dni]");
@@ -105,7 +107,7 @@ $(document).ready(function () {
 
 $(document).ready(function () {
     $("#selectDNI-RUC").change(function () {
-        $(".error-message").attr("class", "error-message ajuste d-none"); //Desabilita Mensaje error
+        $(".error-message").attr("class", "error-message ajuste d-none");
         $("#dni").val("");
         if ($("#selectDNI-RUC").val() == "DNI") {
             $(".CajaRUC").addClass("d-none");
@@ -123,8 +125,7 @@ $(document).ready(function () {
 });
 
 $(document).ready(function () {
-    // <!-- CREAR NUEVA REGISTRO-->
-    $("#registroUsuario")[0].reset(); //limpiar campos
+    $("#registroUsuario")[0].reset();
 
     $("#registroUsuario").submit(function (e) {
         e.preventDefault();
@@ -138,59 +139,60 @@ $(document).ready(function () {
             processData: false,
             contentType: false,
             success: function (response) {
-                if (response) {
-                    $("#registroUsuario")[0].reset(); //limpiar campos
-
-                    Swal.fire({
-                        position: "center",
-                        icon: "success",
-                        title: "Registro Guardado con Exito" ,
-                        showConfirmButton: false,
-                        timer: 1500,
-                    });
-
-                    $("#tbUsuarios").DataTable().ajax.reload(); //recargar datatable
-                    $("#modalNuevoUsuario").modal("hide"); //ocultar modal
-
-                    if ($("#clientes").length > 0) {
-                        $.get("ventaHabitacion/show", function (data) {
-                            //OBTENER CLIENTES
-                            console.log(data);
-
-                            $("#clientes").html(``);
-
-                            $.each(data, function (index, item) {
-                                if (item.dni != null) {
-                                    $("#clientes").html(
-                                        $("#clientes").html() +
-                                            `<option value="${item.id}">${item.dni} - ${item.nombres} ${item.apellidopaterno} ${item.apellidomaterno}</option>`
-                                    );
-                                } else if (item.ruc != null) {
-                                    $("#clientes").html(
-                                        $("#clientes").html() +
-                                            `<option value="${item.id}"> ${item.ruc} - ${item.razonsocial}</option>`
-                                    );
-                                } else {
-                                    $("#clientes").html(
-                                        $("#clientes").html() +
-                                            `<option value="${item.id}">${item.nombres}</option>`
-                                    );
-                                }
-                                if (index === data.length - 1) {
-                                    console.log("Último índice:", index);
-                                  }
-                            });
-                        });
-                    }
-                } else {
+                if (!response) {
                     alert("nO");
+                    return;
+                }
+
+                const personaCreada = response;
+                $("#registroUsuario")[0].reset();
+
+                Swal.fire({
+                    position: "center",
+                    icon: "success",
+                    title: "Registro Guardado con Exito",
+                    showConfirmButton: false,
+                    timer: 1500,
+                });
+
+                if ($("#tbUsuarios").length > 0 && $.fn.DataTable) {
+                    $("#tbUsuarios").DataTable().ajax.reload();
+                }
+
+                $("#modalNuevoUsuario").modal("hide");
+
+                if ($("#clientes").length > 0) {
+                    $.get("ventaHabitacion/show", function (data) {
+                        let opciones = "";
+
+                        $.each(data, function (_, item) {
+                            const selected =
+                                parseInt(item.id, 10) ===
+                                parseInt(personaCreada.id, 10)
+                                    ? " selected"
+                                    : "";
+
+                            if (item.dni != null) {
+                                opciones += `<option value="${item.id}"${selected}>${item.dni} - ${item.nombres} ${item.apellidopaterno} ${item.apellidomaterno}</option>`;
+                            } else if (item.ruc != null) {
+                                opciones += `<option value="${item.id}"${selected}>${item.ruc} - ${item.razonsocial}</option>`;
+                            } else {
+                                opciones += `<option value="${item.id}"${selected}>${item.nombres}</option>`;
+                            }
+                        });
+
+                        $("#clientes").html(opciones);
+                        $("#clientes")
+                            .val(String(personaCreada.id))
+                            .trigger("change");
+                    });
                 }
             },
-            error: function (xhr, status, error) {
+            error: function (xhr) {
                 if (xhr.status === 422) {
                     var errors = xhr.responseJSON.errors;
 
-                    $(".error-message").removeClass("d-none"); //HaBilitar mensaje error
+                    $(".error-message").removeClass("d-none");
                     $.each(errors, function (field, messages) {
                         var element = $('[name="' + field + '"]');
                         var container = element
@@ -198,15 +200,12 @@ $(document).ready(function () {
                             .find(".error-message");
                         container.text(messages[0]);
                     });
-                } else {
-                    // maneja otros errores aquí
                 }
             },
         });
     });
 });
 
-//quitar mensaje de alidacion AL ESCRIBIR
 $(document).ready(function () {
     $(".error-message")
         .closest(".form-group")
@@ -215,6 +214,7 @@ $(document).ready(function () {
             $(this).closest(".form-group").find(".error-message").empty();
         });
 });
+
 $(document).ready(function () {
     $(".error-messageE")
         .closest(".form-group")
